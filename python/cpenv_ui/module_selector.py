@@ -66,7 +66,7 @@ class ModuleSelector(QtGui.QWidget):
         self.header_label = QtGui.QLabel(self.header_message)
         self.header_label.setWordWrap(True)
 
-        self.available_label = QtGui.QLabel('Available Modules')
+        self.available_label = QtGui.QLabel('<b>Available Modules</b>')
         self.available_list = DraggableList(parent=self)
 
         self.selected_label = QtGui.QLabel('Selected')
@@ -119,7 +119,9 @@ class ModuleSelector(QtGui.QWidget):
         _log.info('Setting state from context: %s', str(context))
         project_name = context.project['name']
         self.header_label.setText(self.header_message % project_name)
-        self.selected_label.setText(project_name + ' Modules')
+        self.selected_label.setText(
+            '<b>%s</b>' % (project_name + ' Modules')
+        )
 
         _log.info('Collecting active modules for %s', project_name)
         project_modules = self._app.get_project_modules(
