@@ -17,9 +17,5 @@ The module.yaml file can set environment variables that use the $PLATFORM
 variable to choose which plugin to provision at runtime.
 
 # Configuring tk-cpenv
-The env folder includes all modifications you need to make to your Shotgun
-Toolkit config in order to select modules per project.
-
-To activate modules when launching software you must also modify your
-before_app_launch hook for the tk-multi-launchapp. See the hooks folder
-for an example.
+The example_config folder includes all modifications you need to make to your
+Shotgun Toolkit config in order to get cpenv working.
