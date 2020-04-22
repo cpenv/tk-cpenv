@@ -1,0 +1,7 @@
+
+# Add this to your app_locations.yml
+apps.tk-cpenv.location:
+  type: github_release
+  organization: cpenv
+  repository: tk-cpenv
+  version: v0.1.0
