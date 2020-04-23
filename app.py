@@ -98,7 +98,7 @@ class CpenvApplication(sgtk.platform.Application):
         software_entity = software_entity or {}
         if software_entity.get('engine', engine_name) in enabled_engines:
             modules = self.activate(self.tank.project_path)
-            self.debug('Activated: %s', str([m.name for m in modules]))
+            self.debug('Activated: %s' % [m.name for m in modules])
         else:
             self.debug(
                 'Skipping activation - %s not in enabled_engines(%s).' %

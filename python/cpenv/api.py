@@ -115,7 +115,9 @@ def activate(*args):
 
     r = resolve(*args)
     r.activate()
-    return get_active_env()
+    # return get_active_env()
+    # Patch to return resolved modules.
+    return r.resolved
 
 
 def launch(module_name, *args, **kwargs):
