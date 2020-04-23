@@ -4,4 +4,4 @@ apps.tk-cpenv.location:
   type: github_release
   organization: cpenv
   repository: tk-cpenv
-  version: v0.1.0
+  version: v0.1.1
