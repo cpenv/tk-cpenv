@@ -2,21 +2,34 @@
 import os
 
 # Shotgun imports
-from sgtk.platform import Application
+import sgtk
 
 
-class CpenvApp(Application):
+class CpenvApplication(sgtk.platform.Application):
+
+    def info(self, message, *args):
+        self.logger.info('tk-cpenv: %s' % (message % args))
+
+    def debug(self, message, *args):
+        self.logger.debug('tk-cpenv: %s' % (message % args))
+
+    def error(self, message, *args):
+        self.logger.error('tk-cpenv: %s' % (message % args))
+
+    def exception(self, message, *args):
+        self.logger.exception('tk-cpenv: %s' % (message % args))
 
     def init_app(self):
         self._ui = self.import_module('cpenv_ui')
         self._cpenv = self.import_module('cpenv')
         self.engine.register_command(
             'Set Modules',
-            self.show_dialog
+            self.show_module_selector,
         )
 
-    def show_dialog(self):
+    def show_module_selector(self):
         '''Show the ModuleSelector dialog.'''
+
         self._ui.module_selector.show(self)
 
     def set_module_paths(self, module_paths):
@@ -27,6 +40,8 @@ class CpenvApp(Application):
             if module_path not in new_module_paths:
                 new_module_paths.insert(0, module_path)
         os.environ['CPENV_MODULE_PATHS'] = os.pathsep.join(new_module_paths)
+
+        self.debug('set module paths to %s' % os.getenv('CPENV_MODULE_PATHS'))
 
     def get_modules(self):
         '''Wraps cpenv.get_modules'''
@@ -43,10 +58,7 @@ class CpenvApp(Application):
         try:
             resolver = self._cpenv.resolve(project_path)
         except self._cpenv.ResolveError:
-            self.logger.error(
-                'Failed to resolve modules for %s',
-                project_path
-            )
+            self.error('Failed to resolve modules for %s' % project_path)
             return []
         return resolver.resolved
 
@@ -54,18 +66,20 @@ class CpenvApp(Application):
         '''Write modules to the projects root directory.'''
 
         module_path = os.path.join(project_path, '.cpenv')
-        self.logger.debug('Writing modules to %s', module_path)
+        self.debug('Writing modules to %s' % module_path)
         with open(module_path, 'w') as f:
             f.write('\n'.join(modules))
 
     def resolve(self, *args, **kwargs):
         '''Wraps cpenv.resolve'''
 
+        self.debug('Resolving %s' % args)
         return self._cpenv.resolve(*args, **kwargs)
 
     def activate(self, *args, **kwargs):
         '''Wraps cpenv.activate'''
 
+        self.debug('Activating %s' % args)
         return self._cpenv.activate(*args, **kwargs)
 
     def before_app_launch(self, app_path, app_args, version, engine_name,
@@ -73,18 +87,20 @@ class CpenvApp(Application):
         '''Call in your tk-multi-launchapp before_app_launch Hook to
         activate modules you have configured for your project.'''
 
+        self.debug('Running before_app_launch')
+
         # Set module paths from shotgun setting
         module_paths = self.get_setting('module_paths') or []
         self.set_module_paths(module_paths)
 
-        # If the enging_name is in the enabled_engines activate modules.
+        # If the engine is in the enabled_engines activate modules.
         enabled_engines = self.get_setting('enabled_engines') or []
-        if engine_name in enabled_engines:
+        software_entity = software_entity or {}
+        if software_entity.get('engine', engine_name) in enabled_engines:
             modules = self.activate(self.tank.project_path)
-            self.logger.debug('Activated: %s', str([m.name for m in modules]))
+            self.debug('Activated: %s', str([m.name for m in modules]))
         else:
-            self.logger.debug(
-                'Skipping activation - %s not in enabled_engines(%s).',
-                engine_name,
-                enabled_engines
+            self.debug(
+                'Skipping activation - %s not in enabled_engines(%s).' %
+                (engine_name, enabled_engines)
             )
