@@ -8,9 +8,9 @@ import stat
 import sys
 import tempfile
 from string import Template
-from .vendor import yaml
 from . import platform
 from .compat import string_types, numeric_types
+from .vendor import yaml
 
 
 def is_git_repo(path):

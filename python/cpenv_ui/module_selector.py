@@ -6,9 +6,6 @@ import sgtk
 from sgtk.platform.qt import QtCore, QtGui
 
 
-_log = sgtk.platform.get_logger(__name__)
-
-
 def show(app_instance):
     '''Show the CpenvModuleSelect for the given app_instance.'''
 
@@ -59,8 +56,8 @@ class ModuleSelector(QtGui.QWidget):
     def __init__(self, *args, **kwargs):
         super(ModuleSelector, self).__init__(*args, **kwargs)
 
-        _log.info("Launching cpenv module selector...")
         self._app = sgtk.platform.current_bundle()
+        self._app.info("Launching cpenv module selector...")
 
         # Create widgets
         self.header_label = QtGui.QLabel(self.header_message)
@@ -116,14 +113,14 @@ class ModuleSelector(QtGui.QWidget):
         self.state['available'].clear()
         self.state['selected'].clear()
 
-        _log.info('Setting state from context: %s', str(context))
+        self._app.info('Setting state from context: %s', str(context))
         project_name = context.project['name']
         self.header_label.setText(self.header_message % project_name)
         self.selected_label.setText(
             '<b>%s</b>' % (project_name + ' Modules')
         )
 
-        _log.info('Collecting active modules for %s', project_name)
+        self._app.info('Collecting active modules for %s', project_name)
         project_modules = self._app.get_project_modules(
             self._app.tank.project_path
         )
@@ -131,7 +128,7 @@ class ModuleSelector(QtGui.QWidget):
             self.state['selected'][module.name] = module
             self.selected_list.addItem(module.name)
 
-        _log.info(
+        self._app.info(
             'Collecting available cpenv modules from %s',
             os.getenv('CPENV_MODULES'),
         )
@@ -168,7 +165,7 @@ class ModuleSelector(QtGui.QWidget):
             )
             self.message_label.setText('Changes saved.')
         except Exception:
-            _log.execption('Failed to save project modules...')
+            self._app.execption('Failed to save project modules...')
             self.message_label.setText('Failed to save project modules...')
 
         self.save_button.setEnabled(False)

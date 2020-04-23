@@ -49,7 +49,7 @@ class HookFinder(object):
         try:
             exec(code, hook.__dict__)
             return hook
-        except:
+        except Exception:
             logger.error('Error executing hook: {}'.format(hook_path))
             raise
 
@@ -58,6 +58,7 @@ class HookFinder(object):
 
 def get_global_hook_path():
     '''Returns the global hook path'''
+
     return unipath(os.environ.get('CPENV_HOME', '~/.cpenv'), 'hooks')
 
 
