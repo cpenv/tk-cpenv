@@ -5,7 +5,50 @@ import os
 import sgtk
 
 
+class ModuleSpecSet(object):
+    '''A set of ModuleSpecs.
+
+    Maintains a selection of one of the ModuleSpecs in the set. Used to manage
+    multiple versions of a Module.
+    '''
+
+    def __init__(self, module_specs):
+        self.module_specs = module_specs
+        self.selection = module_specs[0]
+        self.selection_index = 0
+
+    def __contains__(self, spec):
+        for item in self.module_specs:
+            if item.name == spec.name and item.version == spec.version:
+                return True
+        return False
+
+    def select_by_version(self, version):
+        for i, spec in enumerate(self.module_specs):
+            if spec.version.string == version:
+                self.select(i)
+                return i
+        raise IndexError('Could not find spec matching %s' % version)
+
+    def index(self, spec):
+        return self.module_specs.index(spec)
+
+    def add(self, spec):
+        if spec.name != self.selection.name:
+            return
+        for item in self.module_specs:
+            if item.version == spec.version:
+                return
+        self.module_specs.append(spec)
+
+    def select(self, index):
+        self.selection = self.module_specs[index]
+        self.selection_index = index
+
+
 class CpenvApplication(sgtk.platform.Application):
+
+    ModuleSpecSet = ModuleSpecSet
 
     def info(self, message, *args):
         self.logger.info('tk-cpenv: %s' % (message % args))
