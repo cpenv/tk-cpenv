@@ -1,12 +1,13 @@
-# Add this file to your env/includes
+# Add this file to your env/includes/settings
 
 includes:
 - ../app_locations.yml
 
 settings.tk-cpenv:
-  module_paths: []
+  location: "@apps.tk-cpenv.location"
   enabled_engines:
     - tk-maya
     - tk-nuke
     - tk-houdini
-  location: "@apps.tk-cpenv.location"
+  module_entity: "CustomNonProjectEntity01"
+  module_paths: []

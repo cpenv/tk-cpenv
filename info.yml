@@ -24,6 +24,14 @@ configuration:
     values: {type: str}
     description: Additional paths used to resolve modules.
     allows_empty: True
+  home_path:
+    type: str
+    description: Where to store modules locally.
+    default_value: ''
+    required: False
+  module_entity:
+    type: str
+    description: Name of the CustomNonProjectEntity named "Module".
 
 # this app works in all engines - it does not contain
 # any host application specific commands
