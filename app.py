@@ -65,6 +65,11 @@ class CpenvApplication(sgtk.platform.Application):
     def init_app(self):
         self._ui = self.import_module('cpenv_ui')
         self._cpenv = self.import_module('cpenv')
+        self._repo = self._cpenv.ShotgunRepo(
+            name='tk-cpenv',
+            api=self.sgtk.shotgun,
+        )
+        self._cpenv.add_repo(self._repo)
         self.engine.register_command(
             'Set Modules',
             self.show_module_selector,
@@ -91,6 +96,18 @@ class CpenvApplication(sgtk.platform.Application):
 
         return self._cpenv.get_modules()
 
+    def get_module_spec_sets(self):
+        '''Get a list of ModuleSpecSets.'''
+
+        sets = {}
+        for module_spec in self._repo.list():
+            spec_set = sets.setdefault(
+                module_spec.name,
+                ModuleSpecSet([module_spec])
+            )
+            spec_set.add(module_spec)
+        return list(sets.values())
+
     def get_active_modules(self):
         '''Wraps cpenv.get_modules'''
 
@@ -99,11 +116,12 @@ class CpenvApplication(sgtk.platform.Application):
     def get_project_modules(self, project_path):
         '''Return a list of modules this project has set.'''
         try:
-            resolver = self._cpenv.resolve(project_path)
-        except self._cpenv.ResolveError:
-            self.error('Failed to resolve modules for %s' % project_path)
+            resolved = self._cpenv.resolve([project_path])
+            return resolved
+        except self._cpenv.ResolveError as e:
+            self.error('Failed to resolve modules from %s' % project_path)
+            self.exception(e.message)
             return []
-        return resolver.resolved
 
     def set_project_modules(self, project_path, modules):
         '''Write modules to the projects root directory.'''
