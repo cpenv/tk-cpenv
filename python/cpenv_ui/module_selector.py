@@ -1,37 +1,25 @@
+from __future__ import print_function
 # Standard library imports
 import os
+from functools import partial
 
 # Shotgun imports
 import sgtk
 from sgtk.platform.qt import QtCore, QtGui
 
+# Local imports
+from .module_list import ModuleList
+from .module_info import ModuleInfo
+
 
 def show(app_instance):
     '''Show the CpenvModuleSelect for the given app_instance.'''
 
-    app_instance.engine.show_dialog(
+    return app_instance.engine.show_dialog(
         "Set cpenv modules...",
         app_instance,
         ModuleSelector,
     )
-
-
-class DraggableList(QtGui.QListWidget):
-    '''Simple list widget that supports moving items from this list to
-    another DraggableList. Emits item_dropped after an item is dropped.'''
-
-    item_dropped = QtCore.Signal()
-
-    def __init__(self, parent=None):
-        super(DraggableList, self).__init__(parent=parent)
-        self.setSortingEnabled(True)
-        self.setDragDropMode(QtGui.QAbstractItemView.DragDrop)
-        self.setDefaultDropAction(QtCore.Qt.MoveAction)
-        self.setSelectionMode(QtGui.QListWidget.ExtendedSelection)
-
-    def dropEvent(self, event):
-        QtCore.QTimer.singleShot(200, self.item_dropped.emit)
-        return super(DraggableList, self).dropEvent(event)
 
 
 class ModuleSelector(QtGui.QWidget):
@@ -59,15 +47,23 @@ class ModuleSelector(QtGui.QWidget):
         self._app = sgtk.platform.current_bundle()
         self._app.info("Launching cpenv module selector...")
 
+        # Set initial state
+        self.state = {
+            'available': {},  # Full list of available modules
+            'selected': {},  # List of modules to activate on app launch
+        }
+
         # Create widgets
         self.header_label = QtGui.QLabel(self.header_message)
         self.header_label.setWordWrap(True)
 
         self.available_label = QtGui.QLabel('<b>Available Modules</b>')
-        self.available_list = DraggableList(parent=self)
+        self.available_list = ModuleList('available', parent=self)
 
         self.selected_label = QtGui.QLabel('Selected')
-        self.selected_list = DraggableList(parent=self)
+        self.selected_list = ModuleList('selected', parent=self)
+
+        self.module_info = ModuleInfo(parent=self)
 
         self.message_label = QtGui.QLabel('Unsaved changes....')
         self.message_label.hide()
@@ -89,24 +85,32 @@ class ModuleSelector(QtGui.QWidget):
         self.layout.setContentsMargins(20, 20, 20, 20)
         self.layout.setSpacing(10)
         self.layout.setRowStretch(2, 1)
+        self.layout.setColumnStretch(2, 1)
         self.layout.addLayout(self.header, 0, 0, 1, 2)
         self.layout.addWidget(self.available_label, 1, 0)
         self.layout.addWidget(self.available_list, 2, 0)
         self.layout.addWidget(self.selected_label, 1, 1)
         self.layout.addWidget(self.selected_list, 2, 1)
-        self.layout.addLayout(self.footer, 3, 0, 1, 2)
+        self.layout.addWidget(self.module_info, 2, 2)
+        self.layout.addLayout(self.footer, 3, 0, 1, 3)
         self.setLayout(self.layout)
 
         # Connect widgets
+        self.available_list.itemSelectionChanged.connect(partial(
+            self.on_selection_changed,
+            self.available_list
+        ))
         self.available_list.item_dropped.connect(self.on_item_dropped)
+        self.available_list.version_changed.connect(self.on_version_changed)
+        self.selected_list.itemSelectionChanged.connect(partial(
+            self.on_selection_changed,
+            self.selected_list
+        ))
         self.selected_list.item_dropped.connect(self.on_item_dropped)
+        self.selected_list.version_changed.connect(self.on_version_changed)
         self.save_button.clicked.connect(self.on_save_clicked)
 
-        # Set initial state
-        self.state = {
-            'available': {},
-            'selected': {},
-        }
+        # Update initial state from app context
         self.set_state_from_context(self._app.context)
 
     def set_state_from_context(self, context):
@@ -120,54 +124,86 @@ class ModuleSelector(QtGui.QWidget):
             '<b>%s</b>' % (project_name + ' Modules')
         )
 
-        self._app.info('Collecting active modules for %s', project_name)
+        self._app.info('Collecting available cpenv modules')
+        for spec_set in self._app.get_module_spec_sets():
+            name = spec_set.selection.name
+            self.state['available'][name] = spec_set
+
+        self._app.info('Collecting modules for %s', project_name)
         project_modules = self._app.get_project_modules(
             self._app.tank.project_path
         )
-        for module in project_modules:
-            self.state['selected'][module.name] = module
-            self.selected_list.addItem(module.name)
+        for spec in project_modules:
+            spec_set = self.state['available'].get(
+                spec.name,
+                self._app.ModuleSpecSet([spec])
+            )
+            spec_set.select_by_version(spec.version.string)
+            self.state['selected'][spec.name] = spec_set
+            self.selected_list.add_spec_set(spec_set)
 
-        self._app.info(
-            'Collecting available cpenv modules from %s',
-            os.getenv('CPENV_MODULES'),
-        )
-        available_modules = self._app.get_modules()
-        for module in available_modules:
-            self.state['available'][module.name] = module
-            if module.name not in self.state['selected']:
-                self.available_list.addItem(module.name)
+        for spec_set in self.state['available'].values():
+            if spec_set.selection.name in self.state['selected']:
+                continue
+            self.available_list.add_spec_set(spec_set)
+
+    def set_unsaved(self, message='Unsaved changes...'):
+        self.message_label.setText(message)
+        self.message_label.show()
+        self.save_button.setEnabled(True)
+
+    def set_saved(self, message='Changes saved.'):
+        self.message_label.setText(message)
+        self.message_label.show()
+        self.save_button.setEnabled(False)
+        QtCore.QTimer.singleShot(2000, self.message_label.hide)
+
+    def on_selection_changed(self, widget):
+        items = widget.selectedItems()
+        if items:
+            if len(items) == 1:
+                spec = items[0].spec_set.selection
+                self.module_info.set_module_spec(spec)
+        else:
+            self.module_info.clear_module_spec()
+
+    def on_version_changed(self, spec_set):
+        if self.module_info._spec:
+            if spec_set.selection.name == self.module_info._spec.name:
+                self.module_info.set_module_spec(spec_set.selection)
+
+        self._app.info(spec_set.selection.name)
+        self._app.info(', '.join(self.state['selected']))
+        if spec_set.selection.name in self.state['selected']:
+            self.set_unsaved()
 
     def on_item_dropped(self):
-
         old_keys = set(self.state['selected'].keys())
         new_keys = set()
         self.state['selected'].clear()
 
         # Update selected state
-        for i in range(self.selected_list.count()):
-            item = self.selected_list.item(i)
-            module_name = item.text()
+        for item in self.selected_list.iter_items():
+            module_name = item.text(0)
             new_keys.add(module_name)
-            module = self.state['available'][module_name]
-            self.state['selected'][module_name] = module
+            self.state['selected'][module_name] = item.spec_set
 
         if new_keys != old_keys:
-            self.message_label.setText('Unsaved changes...')
-            self.message_label.show()
-            self.save_button.setEnabled(True)
+            self.set_unsaved()
 
     def on_save_clicked(self):
+        # Get a list of requirements
+        requirements = []
+        for spec_set in self.state['selected'].values():
+            requirements.append(spec_set.selection.qual_name)
+
         try:
+            self._app.info('Saving modules:\n' + '\n'.join(requirements))
             self._app.set_project_modules(
                 self._app.tank.project_path,
-                sorted(self.state['selected'].keys()),
+                sorted(requirements),
             )
-            self.message_label.setText('Changes saved.')
+            self.set_saved()
         except Exception:
             self._app.execption('Failed to save project modules...')
-            self.message_label.setText('Failed to save project modules...')
-
-        self.save_button.setEnabled(False)
-        self.message_label.show()
-        QtCore.QTimer.singleShot(2000, self.message_label.hide)
+            self.set_saved('Failed to save project modules...')
