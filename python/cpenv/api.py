@@ -1,184 +1,402 @@
 # -*- coding: utf-8 -*-
-'''
-cpenv.api
-=========
-This module provides the main api for cpenv. Members of the api return models
-which can be used to manipulate virtualenvs and modules. Members are available
-directly from the cpenv namespace.
-'''
-from __future__ import print_function
+from __future__ import absolute_import, print_function
 
+# Standard library imports
 import os
-# import virtualenv
-import shutil
-from .log import logger
-from .resolver import Resolver
-from .utils import unipath
-from .models import VirtualEnvironment, Module
-from .deps import Git
-from . import utils, defaults
+from collections import OrderedDict
+import warnings
+
+# Local imports
+from . import hooks, paths, compat, repos
+from .module import Module, ModuleSpec, module_header, sort_modules
+from .resolver import (
+    ResolveError,
+    Resolver,
+    Activator,
+    Copier,
+    Localizer,
+)
+from .vendor import appdirs, yaml
 
 
-def create(name_or_path=None, config=None):
-    '''Create a virtual environment. You can pass either the name of a new
-    environment to create in your CPENV_HOME directory OR specify a full path
-    to create an environment outisde your CPENV_HOME.
-
-    Create an environment in CPENV_HOME::
-
-        >>> cpenv.create('myenv')
-
-    Create an environment elsewhere::
-
-        >>> cpenv.create('~/custom_location/myenv')
-
-    :param name_or_path: Name or full path of environment
-    :param config: Environment configuration including dependencies etc...
-    '''
-    raise RuntimeError('Method not available in tk-cpenv')
-    # # Get the real path of the environment
-    # if utils.is_system_path(name_or_path):
-    #     path = unipath(name_or_path)
-    # else:
-    #     path = unipath(get_home_path(), name_or_path)
-
-    # if os.path.exists(path):
-    #     raise OSError('{} already exists'.format(path))
-
-    # env = VirtualEnvironment(path)
-    # utils.ensure_path_exists(env.path)
-
-    # if config:
-    #     if utils.is_git_repo(config):
-    #         Git('').clone(config, env.path)
-    #     else:
-    #         shutil.copy2(config, env.config_path)
-    # else:
-    #     with open(env.config_path, 'w') as f:
-    #         f.write(defaults.environment_config)
-
-    # utils.ensure_path_exists(env.hook_path)
-    # utils.ensure_path_exists(env.modules_path)
-
-    # env.run_hook('precreate')
-
-    # virtualenv.create_environment(env.path)
-
-    # try:
-    #     env.update()
-    # except Exception:
-    #     utils.rmtree(path)
-    #     logger.debug('Failed to update, rolling back...')
-    #     raise
-    # else:
-    #     env.run_hook('postcreate')
-
-    # return env
+__all__ = [
+    'activate',
+    'deactivate',
+    'clone',
+    'create',
+    'localize',
+    'publish',
+    'resolve',
+    'set_home_path',
+    'get_home_path',
+    'get_home_modules_path',
+    'get_cache_path',
+    'get_user_path',
+    'get_user_modules_path',
+    'get_modules',
+    'get_module_paths',
+    'add_module_path',
+    'get_active_modules',
+    'add_active_module',
+    'remove_active_module',
+    'get_repos',
+    'get_repo',
+    'add_repo',
+    'get_config_path',
+    'read_config',
+    'write_config',
+    'update_repo',
+    'remove_repo',
+]
+_registry = {
+    'repos': OrderedDict(),
+}
+_active_modules = []
+missing = object()
 
 
-def remove(name_or_path):
-    '''Remove an environment or module
+def resolve(requirements):
+    '''Resolve a list of module requirements.'''
 
-    :param name_or_path: name or path to environment or module
-    '''
-
-    r = resolve(name_or_path)
-    r.resolved[0].remove()
+    resolver = Resolver(get_repos())
+    return resolver.resolve(requirements)
 
 
-def resolve(*args):
-    '''Resolve a list of virtual environment and module names then return
-    a :class:`Resolver` instance.'''
+def localize(requirements, to_repo='home', overwrite=False):
+    '''Localize a list of requirements.'''
 
-    r = Resolver(*args)
-    r.resolve()
-    return r
+    to_repo = get_repo(to_repo)
+
+    # Resolve modules
+    resolver = Resolver(get_repos())
+    module_specs = resolver.resolve(requirements)
+
+    localizer = Localizer(to_repo)
+    modules = localizer.localize(module_specs, overwrite)
+    return modules
 
 
-def activate(*args):
-    '''Activate a virtual environment by name or path. Additional args refer
-    to modules residing in the specified environment that you would
-    also like to activate.
+def activate(requirements):
+    '''Resolve and active a list of module requirements.
 
-    Activate an environment::
+    Usage:
+        >>> cpenv.activate('moduleA', 'moduleB')
 
-        >>> cpenv.activate('myenv')
+    Arguments:
+        requirements (List[str]): List of module requirements
 
-    Activate an environment with some modules::
-
-        >>> cpenv.activate('myenv', 'maya', 'mtoa', 'vray_for_maya')
-
-    :param name_or_path: Name or full path of environment
-    :param modules: Additional modules to activate
-    :returns: :class:`VirtualEnv` instance of active environment
+    Returns:
+        list of Module objects that have been activated
     '''
 
-    r = resolve(*args)
-    r.activate()
-    # return get_active_env()
-    # Patch to return resolved modules.
-    return r.resolved
+    # Resolve modules
+    resolver = Resolver(get_repos())
+    module_specs = resolver.resolve(requirements)
 
-
-def launch(module_name, *args, **kwargs):
-    '''Activates and launches a module
-
-    :param module_name: name of module to launch
-    '''
-
-    r = resolve(module_name)
-    r.activate()
-    mod = r.resolved[0]
-    mod.launch(*args, **kwargs)
+    # Activate modules
+    activator = Activator()
+    modules = activator.activate(module_specs)
+    return modules
 
 
 def deactivate():
     '''Deactivates an environment by restoring all env vars to a clean state
     stored prior to activating environments
     '''
+    # TODO:
+    # Probably need to store a clean environment prior to activate.
+    # In practice it's uncommon to activate then deactivate in the same
+    # python session.
+    pass
 
-    if 'CPENV_ACTIVE' not in os.environ or 'CPENV_CLEAN_ENV' not in os.environ:
-        raise EnvironmentError('Can not deactivate environment...')
 
-    utils.restore_env_from_file(os.environ['CPENV_CLEAN_ENV'])
+def create(where, name, version, **kwargs):
+    '''Create a new module.
+
+    Arguments:
+        where (str): Path to new module
+        name (str): Name of module
+        version (str): Version of module
+        description (str): Optional description of module
+        author (str): Optional author of module
+        email (str): Optional email address of author
+        requires (list): Optional modules that this module depends on
+        environment (dict): Optional environment variables
+
+    Returns:
+        Module object
+    '''
+
+    # Setup configuration defaults
+    config = OrderedDict([
+        ('name', name),
+        ('version', version),
+        ('description', kwargs.get('description', '')),
+        ('author', kwargs.get('author', '')),
+        ('email', kwargs.get('email', '')),
+        ('requires', kwargs.get('requires', [])),
+        ('environment', kwargs.get('environment', {})),
+    ])
+
+    # Check if module already exists
+    where = paths.normalize(where)
+    if os.path.isdir(where):
+        raise OSError('Module already exists at "%s"' % where)
+
+    # Create a Module object - does not yet exist on disk
+    module = Module(where, name, version)
+
+    # Run global precreate hook
+    # Allows users to inject data into a config prior to creating a new module
+    hooks.run_global_hook('pre_create', module, config)
+
+    # Create module folder structure
+    paths.ensure_path_exists(where)
+    paths.ensure_path_exists(where + '/hooks')
+
+    data = module_header + yaml.dump(
+        dict(config),
+        default_flow_style=False,
+        sort_keys=False,
+    )
+    with open(paths.normalize(where, 'module.yml'), 'w') as f:
+        f.write(data)
+
+    # Run global postcreate hook
+    # Allows users to perform some action after a module is created
+    hooks.run_global_hook('post_create', module)
+
+    return module
 
 
-def get_home_path():
-    '''Returns $CPENV_HOME or ~/.cpenv'''
+def remove(module, from_repo=None):
+    '''Remove a module.'''
 
-    home = unipath(os.environ.get('CPENV_HOME', '~/.cpenv'))
-    home_modules = unipath(home, 'modules')
-    if not os.path.exists(home):
-        os.makedirs(home)
-    if not os.path.exists(home_modules):
-        os.makedirs(home_modules)
+    if isinstance(module, Module):
+        return module.remove()
+
+    if isinstance(module, ModuleSpec):
+        return module.repo.remove(module)
+
+    if from_repo is None:
+        raise ValueError('from_repo is required when removing module by name.')
+
+    if isinstance(from_repo, compat.string_types):
+        from_repo = get_repo(from_repo)
+
+    module_spec = from_repo.find(module)[0]
+    return from_repo.remove(module_spec)
+
+
+def clone(module, from_repo=None, where=None, overwrite=False):
+    '''Clone a module for local development.
+
+    A typical development workflow using clone and publish:
+        1. clone a module
+        2. make changes
+        3. test changes
+        4. increment version in module.yml
+        5. publish a new version of your module
+    '''
+
+    if not isinstance(module, (Module, ModuleSpec)):
+        if from_repo is None:
+            resolver = Resolver(get_repos())
+            module_spec = resolver.resolve([module])[0]
+        else:
+            from_repo = get_repo(from_repo)
+            module_spec = from_repo.find(module)[0]
+
+    module = module_spec.repo.download(
+        module_spec,
+        where=paths.normalize(where or '.', module_spec.real_name),
+        overwrite=overwrite,
+    )
+
+    return module
+
+
+def publish(module, to_repo='home', overwrite=False):
+    '''Publish a module to the specified repository.'''
+
+    to_repo = get_repo(to_repo)
+
+    if isinstance(module, compat.string_types):
+        resolver = Resolver(get_repos())
+        module = resolver.resolve([module])[0]
+
+    if isinstance(module, ModuleSpec):
+        if not isinstance(module.repo, repos.LocalRepo):
+            raise ValueError('Can only from modules in local repos.')
+        else:
+            module = Module(module.path)
+
+    published = to_repo.upload(module, overwrite)
+    return published
+
+
+def copy(module, from_repo, to_repo, overwrite=False):
+    '''Copy a module from one repo to another.'''
+
+    from_repo = get_repo(from_repo)
+    to_repo = get_repo(to_repo)
+
+    # Resolve module
+    resolver = Resolver([from_repo])
+    module_spec = resolver.resolve([module])[0]
+
+    copier = Copier(to_repo)
+    copied = copier.copy([module_spec], overwrite)
+    return copied
+
+
+def get_active_modules():
+    '''Returns a list of active :class:`Module` s'''
+
+    return _active_modules
+
+
+def add_active_module(module):
+    '''Add a module to CPENV_ACTIVE_MODULES environment variable.
+
+    Arguments:
+        module (Module): Module to add to CPENV_ACTIVE_MODULES
+    '''
+
+    if module not in _active_modules:
+        _active_modules.append(module)
+
+    _active_modules.sort(key=lambda m: m.real_name)
+
+    module_names = os.pathsep.join([m.real_name for m in _active_modules])
+    os.environ['CPENV_ACTIVE_MODULES'] = str(module_names)
+
+
+def remove_active_module(module):
+    '''Remove a module from CPENV_ACTIVE_MODULES environment variable.
+
+    Arguments:
+        module (Module): Module to remove from CPENV_ACTIVE_MODULES
+    '''
+
+    if module in _active_modules:
+        _active_modules.remove(module)
+
+    module_names = os.pathsep.join([m.real_name for m in _active_modules])
+    os.environ['CPENV_ACTIVE_MODULES'] = str(module_names)
+
+
+def set_home_path(path):
+    '''Convenient function used to set the CPENV_HOME environment variable.'''
+
+    # Set new home path
+    home = paths.normalize(path)
+    os.environ['CPENV_HOME'] = home
+    _init_home_path(home)
+
+    # Add new LocalRepo
+    update_repo(repos.LocalRepo('home', get_home_modules_path()))
+
     return home
 
 
-def get_user_path():
-    '''Returns ~/.cpenv'''
+def _init_home_path(home):
+    home_modules = paths.normalize(home, 'modules')
+    home_cache = paths.normalize(home, 'cache')
 
-    user = unipath('~/.cpenv')
-    user_modules = unipath(user, 'modules')
-    if not os.path.exists(user):
-        os.makedirs(user)
-    if not os.path.exists(user_modules):
-        os.makedirs(user_modules)
+    paths.ensure_path_exists(home)
+    paths.ensure_path_exists(home_modules)
+    paths.ensure_path_exists(home_cache)
+
+
+def get_home_path():
+    '''Returns the cpenv home directory.
+
+    Default home paths:
+        win - C:/ProgramData/cpenv
+        mac - /Library/Application Support/cpenv
+        linux - /usr/local/share/cpenv OR /usr/share/cpenv
+    '''
+
+    home_default = appdirs.site_data_dir('cpenv', appauthor=False)
+    home = paths.normalize(os.getenv('CPENV_HOME', home_default))
+    return home
+
+
+def get_home_modules_path():
+    '''Return the modules directory within the cpenv home directory.
+
+    Default home modules paths:
+        win - C:/ProgramData/cpenv/modules
+        mac - /Library/Application Support/cpenv/modules
+        linux - /usr/local/share/cpenv OR /usr/share/cpenv/modules
+    '''
+
+    return paths.normalize(get_home_path(), 'modules')
+
+
+def get_cache_path(*names):
+    '''Return the cpenv cache directory within the cpenv home directory.
+
+    Default cache paths:
+        win - C:/ProgramData/cpenv/cache
+        mac - /Library/Application Support/cpenv/cache
+        linux - /usr/local/share/cpenv OR /usr/share/cpenv/cache
+
+    Arguments:
+        *names (str) - List of path names to join with cache path
+    '''
+
+    return paths.normalize(get_home_path(), 'cache', *names)
+
+
+def _init_user_path(user):
+    '''Initialize user path.'''
+
+    user_modules = paths.normalize(user, 'modules')
+    paths.ensure_path_exists(user)
+    paths.ensure_path_exists(user_modules)
+
+
+def get_user_path():
+    '''Returns the cpenv user directory.
+
+    Default user paths:
+        win - C:/Users/<username>/AppData/Roaming/cpenv
+        mac - ~/Library/Application Support/cpenv
+        linux - ~/.local/share/cpenv
+    '''
+
+    user_default = appdirs.user_data_dir('cpenv', appauthor=False)
+    user = paths.normalize(user_default)
+
     return user
 
 
-def get_module_paths():
-    '''Returns a list of paths used to lookup modules.
+def get_user_modules_path():
+    '''Returns the modules directory within the cpenv user directory.
 
-    The list of lookup paths contains:
-        1. ~/.cpenv/modules
-        2. $CPENV_HOME/modules
-        3. $CPENV_MODULES
+    Default user paths:
+        win - C:/Users/<username>/AppData/Roaming/cpenv/modules
+        mac - ~/Library/Application Support/cpenv/modules
+        linux - ~/.local/share/cpenv/modules
     '''
 
-    module_paths = [unipath(get_user_path(), 'modules')]
+    return paths.normalize(get_user_path(), 'modules')
 
-    cpenv_home_modules = unipath(get_home_path(), 'modules')
+
+def get_module_paths():
+    '''Returns a list of paths used to lookup local modules.
+
+    The list of lookup paths contains:
+        1. use modules path
+        2. home modules path
+        3. paths in CPENV_MODULES environment variable
+    '''
+
+    module_paths = [paths.normalize(os.getcwd()), get_user_modules_path()]
+
+    cpenv_home_modules = get_home_modules_path()
     if cpenv_home_modules not in module_paths:
         module_paths.append(cpenv_home_modules)
 
@@ -186,160 +404,199 @@ def get_module_paths():
     if cpenv_modules_path:
         for module_path in cpenv_modules_path.split(os.pathsep):
             if module_path not in module_paths:
-                module_paths.append(module_path)
+                module_paths.append(paths.normalize(module_path))
 
     return module_paths
 
 
-def get_active_env():
-    '''Returns the active environment as a :class:`VirtualEnvironment` or None
-    '''
+def add_module_path(path):
+    '''Add an additional lookup path for local modules.'''
 
-    active = os.environ.get('CPENV_ACTIVE', None)
-    if active:
-        return VirtualEnvironment(active)
+    path = paths.normalize(path)
+    module_paths = []
 
+    # Get existing module lookup paths
+    cpenv_modules = os.environ.get('CPENV_MODULES', '').split(os.pathsep)
+    for module_path in cpenv_modules:
+        if module_path:
+            module_paths.append(module_path)
 
-def get_environment(name_or_path):
-    '''Get a :class:`VirtualEnvironment` by name or path.'''
+    # Add new module lookup path
+    if path not in module_paths:
+        module_paths.append(path)
+        add_repo(repos.LocalRepo(path, path))
 
-    r = resolve(name_or_path)
-    return r.resolved[0]
+    # Persist in CPENV_MODULES
+    os.environ['CPENV_MODULES'] = os.pathsep.join(module_paths)
 
-
-def get_environments():
-    '''Returns a list of python virtual environments in CPENV_HOME as
-    :class:`VirtualEnvironment` instances.
-    '''
-
-    environments = set()
-
-    cwd = os.getcwd()
-    for d in os.listdir(cwd):
-
-        if d == 'environment.yml':
-            environments.add(VirtualEnvironment(cwd))
-            continue
-
-        path = unipath(cwd, d)
-        if utils.is_environment(path):
-            environments.add(VirtualEnvironment(path))
-
-    user = get_user_path()
-    for d in os.listdir(user):
-
-        path = unipath(user, d)
-        if utils.is_environment(path):
-            environments.add(VirtualEnvironment(path))
-
-    home = get_home_path()
-    for d in os.listdir(home):
-
-        path = unipath(home, d)
-        if utils.is_environment(path):
-            environments.add(VirtualEnvironment(path))
-
-    return sorted(list(environments), key=lambda x: x.name)
+    return module_paths
 
 
-def get_modules():
+def get_modules(*requirements):
     '''Returns a list of available modules.'''
 
-    modules = set()
+    if requirements:
+        resolver = Resolver(get_repos())
+        return sort_modules(resolver.resolve(requirements))
 
-    cwd = os.getcwd()
-    for d in os.listdir(cwd):
+    modules = []
 
-        if d == 'module.yml':
-            modules.add(Module(cwd))
+    for repo in get_repos():
+        modules.extend(repo.list())
 
-        path = unipath(cwd, d)
-        if utils.is_module(path):
-            modules.add(Module(cwd))
-
-    module_paths = get_module_paths()
-    for module_path in module_paths:
-
-        if not os.path.exists(module_path):
-            continue
-
-        for d in os.listdir(module_path):
-
-            path = unipath(module_path, d)
-            if utils.is_module(path):
-                modules.add(Module(path))
-
-    return sorted(list(modules), key=lambda x: x.name)
+    return sort_modules(list(modules))
 
 
-def get_active_modules():
-    ''':returns: a list of active :class:`Module` s or []'''
+def update_repo(repo):
+    '''Update a registered repo.'''
 
-    modules = os.environ.get('CPENV_ACTIVE_MODULES', None)
-    if modules:
-        modules = modules.split(os.pathsep)
-        return [Module(module) for module in modules]
-
-    return []
+    _registry['repos'].update({repo.name: repo})
 
 
-def add_active_module(module):
-    '''Add a module to CPENV_ACTIVE_MODULES environment variable'''
+def add_repo(repo, idx=None):
+    '''Register a Repo.
 
-    modules = set(get_active_modules())
-    modules.add(module)
-    new_modules_path = os.pathsep.join([m.path for m in modules])
-    os.environ['CPENV_ACTIVE_MODULES'] = str(new_modules_path)
-
-
-def rem_active_module(module):
-    '''Remove a module from CPENV_ACTIVE_MODULES environment variable'''
-
-    modules = set(get_active_modules())
-    modules.discard(module)
-    new_modules_path = os.pathsep.join([m.path for m in modules])
-    os.environ['CPENV_ACTIVE_MODULES'] = str(new_modules_path)
-
-
-def create_module(name_or_path, config=None, branch=None):
-    '''Create a new module.
-
-    Optionally specify a config which can be a git repo. If the config is a git
-    repo you can specify a branch as well.
-
-    :param name_or_path: Name or full path of environment
-    :param config: Environment configuration including dependencies etc...
-    :param branch: If config is a git repo, use this branch
+    Provide an idx to insert the Repo rather than append.
     '''
 
-    # Get the real path of the module
-    if utils.is_system_path(name_or_path):
-        path = unipath(name_or_path)
-    else:
-        path = unipath('.', name_or_path)
-
-    if os.path.exists(path):
-        raise OSError('{} already exists'.format(path))
-
-    module = Module(path)
-
-    if config:
-        if utils.is_git_repo(config):
-            Git('').clone(config, module.path, branch)
-        elif utils.is_module(config):
-            shutil.copytree(unipath(config), module.path)
-        elif os.path.isfile(config) and config.endswith('.yml'):
-            utils.ensure_path_exists(module.path)
-            shutil.copy2(config, module.config_path)
-            module.update()
+    if repo.name not in _registry['repos']:
+        if idx is not None:
+            items = list(_registry['repos'].items())
+            items.insert(idx, (repo.name, repo))
+            _registry['repos'] = OrderedDict(items)
         else:
-            raise Exception('Config must be a repo, module, or config_path.')
+            _registry['repos'][repo.name] = repo
+
+
+def remove_repo(repo):
+    '''Unregister a Repo.'''
+
+    _registry['repos'].pop(repo.name, None)
+
+
+def get_repo(name, **query):
+    '''Get a repo by specifying an attribute to lookup'''
+
+    if isinstance(name, repos.Repo):
+        return name
+
+    query['name'] = name
+
+    for repo in get_repos():
+        if all([getattr(repo, k, False) == v for k, v in query.items()]):
+            return repo
+
+
+def get_repos():
+    '''Get a list of all registered Repos.'''
+
+    return list(_registry['repos'].values())
+
+
+def get_config_path():
+    return paths.normalize(get_home_path(), 'config.yml')
+
+
+def read_config(key=None, default=missing):
+    '''Read the whole config or a specific key from disk.
+
+    Examples:
+        # Read whole config
+        config = read_config()
+
+        # Read one key
+        repos = read_config('repos', {})
+    '''
+
+    config_path = get_config_path()
+    if not os.path.isfile(config_path):
+        return {}
+
+    with open(config_path, 'r') as f:
+        config = yaml.safe_load(f.read()) or {}
+
+    if not key:
+        return config
+
+    config_key = config.get(key, missing)
+    if config_key is missing:
+        if default is missing:
+            raise KeyError('Config has no key: ' + key)
+        else:
+            return default
+
+    return config_key
+
+
+def write_config(*args):
+    '''Write the whole config or a specific key to disk.
+
+    Examples:
+        # Write whole config
+        write_config({'repos': {}})
+
+        # Write one config key
+        write_config('repos', {})
+    '''
+    if len(args) == 1:
+        config = args[0]
+    elif len(args) == 2:
+        config = read_config()
+        config[args[0]] = args[1]
     else:
-        with open(module.config_path, 'w') as f:
-            f.write(defaults.module_config)
+        raise ValueError('Expected 1 or 2 arguments got %s' % len(args))
 
-    utils.ensure_path_exists(module.hook_path)
-    module.run_hook('precreatemodule')
-    module.run_hook('postcreatemodule')
+    config_path = get_config_path()
+    with open(config_path, 'w') as f:
+        f.write(yaml.dump(config))
 
-    return module
+
+def _init():
+    '''Responsible for initially configuraing cpenv.'''
+
+    _init_home_path(get_home_path())
+    _init_user_path(get_user_path())
+
+    # Register all LocalRepos
+    for path in get_module_paths():
+        if path == paths.normalize(os.getcwd()):
+            name = 'cwd'
+        elif path == get_home_modules_path():
+            name = 'home'
+        elif path == get_user_modules_path():
+            name = 'user'
+        else:
+            name = path
+        add_repo(repos.LocalRepo(name, path))
+
+    # Register repos from config
+    configured_repos = read_config('repos', {})
+    for name, config in configured_repos.items():
+        repo_type = config.pop('type')
+        repo_cls = repos.registry[repo_type]
+        try:
+            add_repo(repo_cls(**config))
+        except Exception as e:
+            warnings.warn('Failed to create %s repo named %s\nError: %s' % (
+                repo_type,
+                config['name'],
+                str(e),
+            ))
+
+    # Set _active_modules from CPENV_ACTIVE_MODULES
+    unresolved = []
+    resolver = Resolver(get_repos())
+    active_modules = os.getenv('CPENV_ACTIVE_MODULES')
+    if active_modules:
+        for module in active_modules.split(os.pathsep):
+            if module:
+                try:
+                    resolved = resolver.resolve([module])[0]
+                    _active_modules.append(resolved)
+                except ResolveError:
+                    unresolved.append(module)
+
+    if unresolved:
+        warnings.warn(
+            'Unable to resolve %s from $CPENV_ACTIVE_MODULES:' % unresolved
+        )

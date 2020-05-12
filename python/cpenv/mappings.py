@@ -1,173 +1,25 @@
 # -*- coding: utf-8 -*-
+from __future__ import absolute_import, print_function
 
+# Standard library imports
 import os
 import random
-import shlex
-import shutil
-import stat
 import sys
 import tempfile
 from string import Template
-from . import platform
-from .compat import string_types, numeric_types
+
+# Local imports
+from . import paths
+from .compat import numeric_types, platform, string_types
 from .vendor import yaml
 
 
-def is_git_repo(path):
-    '''Returns True if path is a git repository.'''
-
-    if path.startswith('git@') or path.startswith('https://'):
-        return True
-
-    if os.path.exists(unipath(path, '.git')):
-        return True
-
-    return False
+def _preprocess_dict(d):
+    if platform in d:
+        return d[platform]
 
 
-def is_home_environment(path):
-    '''Returns True if path is in CPENV_HOME'''
-
-    home = unipath(os.environ.get('CPENV_HOME', '~/.cpenv'))
-    path = unipath(path)
-
-    return path.startswith(home)
-
-
-def is_environment(path):
-    '''Returns True if path refers to an environment'''
-
-    return os.path.exists(unipath(path, 'environment.yml'))
-
-
-def is_module(path):
-    '''Returns True if path refers to a module'''
-
-    return os.path.exists(unipath(path, 'module.yml'))
-
-
-def is_system_path(path):
-    '''Returns True if path is a system path'''
-
-    return '\\' in path or '/' in path
-
-
-def is_redirecting(path):
-    '''Returns True if path contains a .cpenv file'''
-
-    candidate = unipath(path, '.cpenv')
-    return os.path.exists(candidate) and os.path.isfile(candidate)
-
-
-def redirect_to_env_paths(path):
-    '''Get environment path from redirect file'''
-
-    with open(path, 'r') as f:
-        data = f.read()
-
-    return parse_redirect(data)
-
-
-def parse_redirect(data):
-    '''Parses a redirect string - data of a .cpenv file'''
-
-    lines = [line for line in data.split('\n') if line.strip()]
-    if len(lines) == 1:
-        return shlex.split(lines[0])
-    else:
-        return lines
-
-
-def expandpath(path):
-    '''Returns an absolute expanded path'''
-
-    return os.path.abspath(os.path.expandvars(os.path.expanduser(path)))
-
-
-def unipath(*paths):
-    '''Like os.path.join but also expands and normalizes path parts.'''
-
-    return os.path.normpath(expandpath(os.path.join(*paths)))
-
-
-def binpath(*paths):
-    '''Like os.path.join but acts relative to this packages bin path.'''
-
-    package_root = os.path.dirname(__file__)
-    return os.path.normpath(os.path.join(package_root, 'bin', *paths))
-
-
-def ensure_path_exists(path, *args):
-    '''Like os.makedirs but keeps quiet if path already exists'''
-    if os.path.exists(path):
-        return
-
-    os.makedirs(path, *args)
-
-
-def walk_dn(start_dir, depth=10):
-    '''
-    Walk down a directory tree. Same as os.walk but allows for a depth limit
-    via depth argument
-    '''
-
-    start_depth = len(os.path.split(start_dir))
-    end_depth = start_depth + depth
-
-    for root, subdirs, files in os.walk(start_dir):
-        yield root, subdirs, files
-
-        if len(os.path.split(root)) >= end_depth:
-            break
-
-
-def rmtree(path):
-    def onerror(func, path, _):
-        os.chmod(path, stat.S_IWRITE)
-        func(path)
-
-    shutil.rmtree(path, onerror=onerror)
-
-
-def walk_up(start_dir, depth=20):
-    '''
-    Walk up a directory tree
-    '''
-    root = start_dir
-
-    for i in range(depth):
-        contents = os.listdir(root)
-        subdirs, files = [], []
-        for f in contents:
-            if os.path.isdir(os.path.join(root, f)):
-                subdirs.append(f)
-            else:
-                files.append(f)
-
-        yield root, subdirs, files
-
-        parent = os.path.dirname(root)
-        if parent and not parent == root:
-            root = parent
-        else:
-            break
-
-
-def touch(filepath):
-    '''Touch the given filepath'''
-
-    with open(filepath, 'a'):
-        os.utime(filepath, None)
-
-
-def _pre_dict(d):
-
-    value = d.get(platform)
-    value = PREPROCESSORS[type(value)](value)
-    return value
-
-
-def _pre_seq(seq):
+def _preprocess_seq(seq):
     value = []
     for item in seq:
         item_value = PREPROCESSORS[type(item)](item)
@@ -178,19 +30,19 @@ def _pre_seq(seq):
     return value
 
 
-def _pre_str(s):
+def _preprocess_str(s):
     return str(s)
 
 
 PREPROCESSORS = {
-    dict: _pre_dict,
-    list: _pre_seq,
-    set: _pre_seq,
-    tuple: _pre_seq,
+    dict: _preprocess_dict,
+    list: _preprocess_seq,
+    set: _preprocess_seq,
+    tuple: _preprocess_seq,
 }
 
 PREPROCESSORS.update(
-    dict((typ, _pre_str) for typ in numeric_types + string_types)
+    dict((typ, _preprocess_str) for typ in numeric_types + string_types)
 )
 
 
@@ -213,9 +65,14 @@ def preprocess_dict(d):
 
 
 def _join_dict(d, k, v):
-    '''Add a dict value to an env dict'''
+    '''Add a dict value to an env dict.
 
-    d[k] = v[platform]
+    Assumes that a dict value contains system platform keys (win, mac, linux).
+    If a key is missing - we do not add this key to the result dict.
+    '''
+
+    if platform in v:
+        d[k] = v[platform]
 
 
 def _join_str(d, k, v):
@@ -258,9 +115,10 @@ def join_dicts(*dicts):
     out_dict = {}
 
     for d in dicts:
+
         for k, v in d.items():
 
-            if not type(v) in JOINERS:
+            if type(v) not in JOINERS:
                 raise KeyError('Invalid type in dict: {}'.format(type(v)))
 
             JOINERS[type(v)](out_dict, k, v)
@@ -335,7 +193,10 @@ def get_store_env_tmp():
 
     tempdir = tempfile.gettempdir()
     temp_name = 'envstore{0:0>3d}'
-    temp_path = unipath(tempdir, temp_name.format(random.getrandbits(9)))
+    temp_path = paths.normalize(
+        tempdir,
+        temp_name.format(random.getrandbits(9))
+    )
     if not os.path.exists(temp_path):
         return temp_path
     else:
