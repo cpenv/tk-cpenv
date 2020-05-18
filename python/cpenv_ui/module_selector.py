@@ -1,6 +1,7 @@
+# -*- coding: utf-8 -*-
 from __future__ import print_function
+
 # Standard library imports
-import os
 from functools import partial
 
 # Shotgun imports
@@ -159,6 +160,20 @@ class ModuleSelector(QtGui.QWidget):
         QtCore.QTimer.singleShot(2000, self.message_label.hide)
 
     def on_selection_changed(self, widget):
+
+        # Deselect items in the opposite list
+        if widget == self.selected_list:
+            self._app.info('Selected List changed.')
+            self.available_list.blockSignals(True)
+            self.available_list.clear_selection()
+            self.available_list.blockSignals(False)
+        else:
+            self._app.info('Available List changed.')
+            self.selected_list.blockSignals(True)
+            self.selected_list.clear_selection()
+            self.selected_list.blockSignals(False)
+
+        # Update ModuleInfo panel
         items = widget.selectedItems()
         if items:
             if len(items) == 1:

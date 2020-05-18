@@ -65,11 +65,20 @@ class CpenvApplication(sgtk.platform.Application):
     def init_app(self):
         self._ui = self.import_module('cpenv_ui')
         self._cpenv = self.import_module('cpenv')
+
+        # Setup UIReporter
+        class _UIReporter(self._ui.UIReporter, self._cpenv.Reporter):
+            '''Mix UIReporter with Reporter base class.'''
+        self._cpenv.set_reporter(_UIReporter)
+
+        # Setup ShotgunRepo
         self._repo = self._cpenv.ShotgunRepo(
             name='tk-cpenv',
             api=self.sgtk.shotgun,
         )
         self._cpenv.add_repo(self._repo)
+
+        # Register Set Modules command to show the ModuleSelector dialog
         self.engine.register_command(
             'Set Modules',
             self.show_module_selector,

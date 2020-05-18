@@ -1,3 +1,6 @@
+# -*- coding: utf-8 -*-
+from __future__ import print_function
+
 # Standard library imports
 from functools import partial
 
@@ -50,6 +53,10 @@ class ModuleList(QtGui.QTreeWidget):
         # Drag and drop settings
         self.setDragDropMode(QtGui.QAbstractItemView.DragDrop)
         self.setDefaultDropAction(QtCore.Qt.MoveAction)
+
+    def clear_selection(self):
+        for item in self.iter_items():
+            item.setSelected(False)
 
     def iter_items(self):
         for i in range(self.topLevelItemCount()):

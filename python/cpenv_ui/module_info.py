@@ -1,4 +1,6 @@
+# -*- coding: utf-8 -*-
 from __future__ import print_function
+
 # Standard library imports
 import os
 
@@ -123,7 +125,7 @@ class ModuleInfo(QtGui.QWidget):
 
         # Format environment
         if data['environment']:
-            environment = self._app._cpenv.yaml.safe_dump(
+            environment = self._app._cpenv.vendor.yaml.safe_dump(
                 data['environment'],
                 default_flow_style=False,
                 sort_keys=False,
@@ -156,7 +158,7 @@ class ModuleInfo(QtGui.QWidget):
         if not os.path.isdir(icons_root):
             os.makedirs(icons_root)
 
-        # Cache thumbnail locally
+        # Download and cache thumbnail locally
         icon_path = cpenv.get_cache_path('icons', spec.qual_name + '_icon.png')
         if not os.path.isfile(icon_path):
             try:
