@@ -71,8 +71,10 @@ def localize(requirements, to_repo='home', overwrite=False):
     resolver = Resolver(get_repos())
     module_specs = resolver.resolve(requirements)
 
+    # Localize modules from remote repos
     localizer = Localizer(to_repo)
     modules = localizer.localize(module_specs, overwrite)
+
     return modules
 
 
@@ -96,6 +98,7 @@ def activate(requirements):
     # Activate modules
     activator = Activator()
     modules = activator.activate(module_specs)
+
     return modules
 
 
@@ -335,7 +338,7 @@ def get_home_modules_path():
     return paths.normalize(get_home_path(), 'modules')
 
 
-def get_cache_path(*names):
+def get_cache_path(*parts):
     '''Return the cpenv cache directory within the cpenv home directory.
 
     Default cache paths:
@@ -344,10 +347,10 @@ def get_cache_path(*names):
         linux - /usr/local/share/cpenv OR /usr/share/cpenv/cache
 
     Arguments:
-        *names (str) - List of path names to join with cache path
+        *parts (str) - List of path parts to join with cache path
     '''
 
-    return paths.normalize(get_home_path(), 'cache', *names)
+    return paths.normalize(get_home_path(), 'cache', *parts)
 
 
 def _init_user_path(user):

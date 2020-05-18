@@ -57,6 +57,7 @@ class HookFinder(object):
 
 def get_global_hook_path():
     '''Returns the global hook path'''
+
     from .api import get_home_path
     return paths.normalize(get_home_path(), 'hooks')
 
