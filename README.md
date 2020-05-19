@@ -17,7 +17,15 @@ variable to choose which plugin to provision at runtime.
 
 # Configuring tk-cpenv
 The example_config folder includes all modifications you need to make to your
-Shotgun Toolkit config in order to get cpenv working. You will need to customize the value of the module_entity config key when you enable a CustomNonProjectEntity in the next section.
+Shotgun Toolkit config in order to get cpenv working. 
+
+## tk-cpenv settings
+- **enabled_engines**: List of engines that tk-cpenv will activate modules for.
+- **home_path**: Where to store modules locally. Defaults to a local path available across all users on your machine. You may choose to use a network location here, so that all users in a network share modules.
+- **module_paths**: List of additional paths used to lookup modules. Can be useful when developing modules.
+- **module_entity**: Name of the CustomNonProjectEntity named "Module".
+
+You will need to customize the value of the module_entity config key when you enable a CustomNonProjectEntity in the next section.
 
 ## Enable a CustomNonProjectEntity named Module
 1. Browse to site-preferences
