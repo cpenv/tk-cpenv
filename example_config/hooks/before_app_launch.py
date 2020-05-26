@@ -49,11 +49,11 @@ class BeforeAppLaunch(HookBaseClass):
         # if you already have one.
 
         # Here we get the tk-cpenv app from the current engine.
-        self.logger.info('Loading tk-multi-cpenv...')
+        self.logger.info('Loading tk-cpenv...')
         cpenv = self.parent.engine.apps.get('tk-cpenv')
 
         # Now we call the before_app_launch method of the tk-cpenv app
-        self.logger.info('Running cpenv before_app_launch...')
+        self.logger.info('Running tk-cpenv before_app_launch...')
         try:
             cpenv.before_app_launch(
                 app_path,
