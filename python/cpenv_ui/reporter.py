@@ -45,7 +45,10 @@ class UIReporter(object):
         '''Called when Resolver.resolve is done.'''
 
         if unresolved:
-            self.dialog.error('Failed to resolve:\n' + '\n  '.join(unresolved))
+            self.dialog.error(
+                label='Failed to resolve',
+                message='\n  '.join(unresolved),
+            )
         else:
             self.dialog.set_label('Done!')
             self.dialog.hide()

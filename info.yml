@@ -12,26 +12,22 @@
 
 # expected fields in the configuration file for this engine
 configuration:
-  enabled_engines:
-    type: list
-    values: {type: str}
-    description: "A list of engines that the before_app_launch method will
-      apply to. You are still required to call cpenv.before_app_launch in your
-      own before_app_launch hook. "
-    allows_empty: True
-  module_paths:
-    type: list
-    values: {type: str}
-    description: Additional paths used to resolve modules.
-    allows_empty: True
   home_path:
     type: str
     description: Where to store modules locally.
     default_value: ''
     required: False
+  module_paths:
+    type: list
+    values: {type: str}
+    description: Additional paths used to resolve modules.
+    allows_empty: True
   module_entity:
     type: str
     description: Name of the CustomNonProjectEntity named "Module".
+  environment_entity:
+    type: str
+    description: Name of the CustomEntity named "Environment".
 
 # this app works in all engines - it does not contain
 # any host application specific commands
@@ -51,3 +47,4 @@ requires_engine_version:
 
 # the frameworks required to run this app
 frameworks:
+  - {"name": "tk-framework-qtwidgets", "version": "v2.x.x", "minimum_version": "v2.8.0"}

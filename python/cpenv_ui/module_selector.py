@@ -2,6 +2,7 @@
 from __future__ import print_function
 
 # Standard library imports
+import traceback
 from functools import partial
 
 # Shotgun imports
@@ -9,8 +10,13 @@ import sgtk
 from sgtk.platform.qt import QtCore, QtGui
 
 # Local imports
+from .dialogs import ErrorDialog
+from .env_importer import EnvImporter
 from .module_list import ModuleList
 from .module_info import ModuleInfo
+from . import res
+
+app = sgtk.platform.current_bundle()
 
 
 def show(app_instance):
@@ -45,11 +51,14 @@ class ModuleSelector(QtGui.QWidget):
     def __init__(self, *args, **kwargs):
         super(ModuleSelector, self).__init__(*args, **kwargs)
 
-        self._app = sgtk.platform.current_bundle()
-        self._app.info("Launching cpenv module selector...")
+        app = sgtk.platform.current_bundle()
+        app.info("Launching cpenv module selector...")
 
         # Set initial state
         self.state = {
+            'environment': None,  # Current environment
+            'environments': [],  # Project environments
+            'engines': [],  # Name of available engines
             'available': {},  # Full list of available modules
             'selected': {},  # List of modules to activate on app launch
         }
@@ -58,10 +67,54 @@ class ModuleSelector(QtGui.QWidget):
         self.header_label = QtGui.QLabel(self.header_message)
         self.header_label.setWordWrap(True)
 
-        self.available_label = QtGui.QLabel('<b>Available Modules</b>')
+        self.env_list = QtGui.QComboBox()
+        self.env_list.setFixedHeight(24)
+        self.env_label = QtGui.QLabel('Environment')
+        self.env_label.setToolTip(
+            'An environment consists of module requirements and applies to '
+            'a single toolkit engine. The required modules will be activated '
+            'when the toolkit engines application is launched.')
+        self.env_label.setSizePolicy(
+            QtGui.QSizePolicy.Expanding,
+            QtGui.QSizePolicy.Expanding,
+        )
+        self.env_import = QtGui.QToolButton(
+            icon=QtGui.QIcon(res.get_path('import.png'))
+        )
+        self.env_import.setToolTip('Import environments from another project.')
+        self.env_add = QtGui.QToolButton(
+            icon=QtGui.QIcon(res.get_path('add.png'))
+        )
+        self.env_add.setToolTip('Add a new environment to this project.')
+        self.env_remove = QtGui.QToolButton(
+            icon=QtGui.QIcon(res.get_path('remove.png'))
+        )
+        self.env_remove.setToolTip('Delete current environment.')
+        self.env_header = QtGui.QHBoxLayout()
+        self.env_header.addWidget(self.env_label)
+        self.env_header.addWidget(self.env_import)
+        self.env_header.addWidget(self.env_add)
+        self.env_header.addWidget(self.env_remove)
+
+        self.engine_label = QtGui.QLabel('Engine')
+        self.engine_label.setToolTip(
+            'The toolkit engine this environment applies to.'
+        )
+        self.engine_list = QtGui.QComboBox()
+        self.engine_label.setToolTip(
+            'Select a toolkit engine this environment applies to.'
+        )
+        self.engine_list.setFixedHeight(24)
+
+        self.available_label = QtGui.QLabel('Available Modules')
+        self.available_label.setToolTip('List of available modules.')
         self.available_list = ModuleList('available', parent=self)
 
-        self.selected_label = QtGui.QLabel('Selected')
+        self.selected_label = QtGui.QLabel('Requires')
+        self.selected_label.setToolTip(
+            'The modules this environment requires.\n'
+            'These will be activated when launching the associated engine.'
+        )
         self.selected_list = ModuleList('selected', parent=self)
 
         self.module_info = ModuleInfo(parent=self)
@@ -72,10 +125,6 @@ class ModuleSelector(QtGui.QWidget):
         self.save_button.setStyleSheet(self.button_style)
         self.save_button.setEnabled(False)
 
-        # Layout widgets
-        self.header = QtGui.QHBoxLayout()
-        self.header.addWidget(self.header_label)
-
         self.footer = QtGui.QHBoxLayout()
         self.footer.setAlignment(QtCore.Qt.AlignRight)
         self.footer.addStretch(1)
@@ -84,16 +133,20 @@ class ModuleSelector(QtGui.QWidget):
 
         self.layout = QtGui.QGridLayout()
         self.layout.setContentsMargins(20, 20, 20, 20)
-        self.layout.setSpacing(10)
-        self.layout.setRowStretch(2, 1)
+        self.layout.setVerticalSpacing(4)
+        self.layout.setHorizontalSpacing(12)
+        self.layout.setRowStretch(5, 1)
         self.layout.setColumnStretch(2, 1)
-        self.layout.addLayout(self.header, 0, 0, 1, 2)
-        self.layout.addWidget(self.available_label, 1, 0)
-        self.layout.addWidget(self.available_list, 2, 0)
-        self.layout.addWidget(self.selected_label, 1, 1)
-        self.layout.addWidget(self.selected_list, 2, 1)
-        self.layout.addWidget(self.module_info, 2, 2)
-        self.layout.addLayout(self.footer, 3, 0, 1, 3)
+        self.layout.addWidget(self.available_label, 0, 1)
+        self.layout.addWidget(self.available_list, 1, 1, 5, 1)
+        self.layout.addLayout(self.env_header, 0, 0)
+        self.layout.addWidget(self.env_list, 1, 0)
+        self.layout.addWidget(self.engine_label, 2, 0)
+        self.layout.addWidget(self.engine_list, 3, 0)
+        self.layout.addWidget(self.selected_label, 4, 0)
+        self.layout.addWidget(self.selected_list, 5, 0)
+        self.layout.addWidget(self.module_info, 0, 2, 6, 1)
+        self.layout.addLayout(self.footer, 6, 0)
         self.setLayout(self.layout)
 
         # Connect widgets
@@ -110,65 +163,146 @@ class ModuleSelector(QtGui.QWidget):
         self.selected_list.item_dropped.connect(self.on_item_dropped)
         self.selected_list.version_changed.connect(self.on_version_changed)
         self.save_button.clicked.connect(self.on_save_clicked)
+        self.engine_list.activated.connect(self.on_engine_changed)
+        self.env_import.clicked.connect(self.on_env_import_clicked)
+        self.env_add.clicked.connect(self.on_env_add_clicked)
+        self.env_remove.clicked.connect(self.on_env_remove_clicked)
+        self.env_list.activated.connect(self.on_env_changed)
 
         # Update initial state from app context
-        self.set_state_from_context(self._app.context)
+        self.set_state_from_context(app.context)
 
-    def set_state_from_context(self, context):
+    def clear_state(self):
         self.state['available'].clear()
+        self.state['engines'][:] = []
+        self.state['environment'] = None
+        self.state['environments'][:] = []
         self.state['selected'].clear()
 
-        self._app.info('Setting state from context: %s', str(context))
-        project_name = context.project['name']
-        self.header_label.setText(self.header_message % project_name)
-        self.selected_label.setText(
-            '<b>%s</b>' % (project_name + ' Modules')
-        )
+    def set_state_from_context(self, context):
+        self.clear_state()
 
-        self._app.info('Collecting available cpenv modules')
-        for spec_set in self._app.get_module_spec_sets():
+        app.info('Setting state from context: %s', str(context))
+
+        app.info('Collecting environments')
+        self.state['environments'] = app.io.get_environments()
+        if self.state['environments']:
+            self.state['environment'] = self.state['environments'][0]
+
+        app.info('Collecting engines')
+        self.state['engines'] = app.io.get_engines()
+
+        app.info('Collecting available cpenv modules')
+        for spec_set in app.io.get_module_spec_sets():
             name = spec_set.selection.name
             self.state['available'][name] = spec_set
 
-        self._app.info('Collecting modules for %s', project_name)
-        project_modules = self._app.get_project_modules(
-            self._app.tank.project_path
-        )
-        for spec in project_modules:
-            spec_set = self.state['available'].get(
-                spec.name,
-                self._app.ModuleSpecSet([spec])
-            )
-            spec_set.select_by_version(spec.version.string)
-            self.state['selected'][spec.name] = spec_set
-            self.selected_list.add_spec_set(spec_set)
+        app.info('Updating state from environment requires')
+        self.update_state()
 
+        app.info('Updating Widgets')
+        self.update_widgets()
+
+    def update_state(self):
+        if self.state['environment']:
+            # Update selected state
+            self.state['selected'].clear()
+            if not self.state['environment']['sg_requires']:
+                return
+
+            requires_text = self.state['environment']['sg_requires']
+            requires = app.parse_requires(requires_text)
+            module_specs = app.resolve(requires)
+            for spec in module_specs:
+                spec_set = self.state['available'].get(
+                    spec.name,
+                    app.ModuleSpecSet([spec])
+                )
+                spec_set.select_by_version(spec.version.string)
+                self.state['selected'][spec.name] = spec_set
+
+    def update_widgets(self):
+        '''Update all widgets based on current state.'''
+
+        self.module_info.clear_module_spec()
+        self._update_available_list()
+        self._update_env_list()
+        self._update_engine_list()
+        self._update_selected_list()
+        self.set_saved(message='')
+
+    def _update_available_list(self):
+        self.available_list.clear()
         for spec_set in self.state['available'].values():
             if spec_set.selection.name in self.state['selected']:
                 continue
             self.available_list.add_spec_set(spec_set)
 
+    def _update_env_list(self):
+        self.env_list.clear()
+
+        if not self.state['environments']:
+            self.env_list.setEnabled(False)
+            self.env_list.addItem('No Environments')
+        else:
+            self.env_list.setEnabled(True)
+
+            for env in self.state['environments']:
+                self.env_list.addItem(env['code'])
+
+            if self.state['environment']:
+                idx = self.env_list.findText(self.state['environment']['code'])
+                if idx != -1:
+                    self.env_list.setCurrentIndex(idx)
+
+    def _update_engine_list(self):
+        self.engine_list.clear()
+        if not self.state['environment']:
+            self.engine_list.setEnabled(False)
+        else:
+            self.engine_list.setEnabled(True)
+            if self.state['engines']:
+                self.engine_list.addItems(self.state['engines'])
+            engine = self.state['environment']['sg_engine']
+            idx = self.engine_list.findText(engine)
+            if idx != -1:
+                self.engine_list.setCurrentIndex(idx)
+            else:
+                self.engine_list.addItem('Select an Engine')
+                self.engine_list.setCurrentIndex(self.engine_list.count() - 1)
+
+    def _update_selected_list(self):
+        self.selected_list.clear()
+        if not self.state['environment']:
+            self.selected_list.setEnabled(False)
+        else:
+            self.selected_list.setEnabled(True)
+            for spec_set in self.state['selected'].values():
+                self.selected_list.add_spec_set(spec_set)
+
     def set_unsaved(self, message='Unsaved changes...'):
         self.message_label.setText(message)
         self.message_label.show()
+        self.state['unsaved_changes'] = True
         self.save_button.setEnabled(True)
 
     def set_saved(self, message='Changes saved.'):
         self.message_label.setText(message)
         self.message_label.show()
         self.save_button.setEnabled(False)
+        self.state['unsaved_changes'] = False
         QtCore.QTimer.singleShot(2000, self.message_label.hide)
 
     def on_selection_changed(self, widget):
 
         # Deselect items in the opposite list
         if widget == self.selected_list:
-            self._app.info('Selected List changed.')
+            app.info('Selected List changed.')
             self.available_list.blockSignals(True)
             self.available_list.clear_selection()
             self.available_list.blockSignals(False)
         else:
-            self._app.info('Available List changed.')
+            app.info('Available List changed.')
             self.selected_list.blockSignals(True)
             self.selected_list.clear_selection()
             self.selected_list.blockSignals(False)
@@ -182,13 +316,117 @@ class ModuleSelector(QtGui.QWidget):
         else:
             self.module_info.clear_module_spec()
 
+    def on_env_remove_clicked(self):
+
+        env = self.state['environment']
+
+        response = QtGui.QMessageBox.question(
+            self,
+            'Delete Environment',
+            'Are you sure you want to delete %s?' % env['code'],
+            QtGui.QMessageBox.Yes | QtGui.QMessageBox.No,
+        )
+        if response == QtGui.QMessageBox.No:
+            return
+
+        try:
+            app.io.delete_environment(env['id'])
+        except Exception:
+            error_message = ErrorDialog(
+                label='Failed to delete environment.',
+                message=traceback.format_exc(),
+                parent=self,
+            )
+            error_message.exec_()
+            return
+
+        self.state['environments'].remove(env)
+        if self.state['environments']:
+            self.state['environment'] = self.state['environments'][0]
+        else:
+            self.state['environment'] = None
+
+        self.update_state()
+        self.update_widgets()
+
+    def on_env_add_clicked(self):
+        env_names = [e['code'] for e in self.state['environments']]
+        while True:
+            name, ok = QtGui.QInputDialog.getText(
+                self,
+                'Add environment',
+                'Environment Name:',
+            )
+            if ok and name in env_names:
+                error_message = ErrorDialog(
+                    label='Environment already exists:',
+                    message='Please choose another name.',
+                    parent=self,
+                )
+                error_message.exec_()
+            elif ok:
+                # Exit retry loop
+                break
+            else:
+                # Canceled
+                return
+
+        new_env = app.io.update_environment(
+            code=name,
+            engine='',
+            requires='',
+            project=app.context.project,
+        )
+        self.state['environments'].append(new_env)
+        self.state['environment'] = new_env
+
+        # Update state and ui
+        self.update_state()
+        self.update_widgets()
+
+    def on_env_import_clicked(self):
+        app.info('Import clicked.')
+        try:
+            importer = EnvImporter(self)
+            accepted = importer.exec_()
+            if accepted:
+                # Refresh the entire UI
+                self.set_state_from_context(app.context)
+        except:
+            app.exception('EnvImporter failure.')
+
+    def on_env_changed(self, index):
+        env = self.state['environment']
+        if self.state['unsaved_changes']:
+            response = QtGui.QMessageBox.question(
+                self,
+                'Unsaved Changes...',
+                'Discard unsaved changes to %s?' % env['code'],
+                QtGui.QMessageBox.Yes | QtGui.QMessageBox.No,
+            )
+            if response == QtGui.QMessageBox.No:
+                idx = self.env_list.findText(env['code'])
+                if idx != -1:
+                    self.env_list.setCurrentIndex(idx)
+                return
+
+        self.state['environment'] = self.state['environments'][index]
+        self.update_state()
+        self.update_widgets()
+
+    def on_engine_changed(self, index):
+        if self.state['environment']:
+            engine = self.engine_list.itemText(index)
+            if engine != self.state['environment']['sg_engine']:
+                self.set_unsaved()
+
     def on_version_changed(self, spec_set):
         if self.module_info._spec:
             if spec_set.selection.name == self.module_info._spec.name:
                 self.module_info.set_module_spec(spec_set.selection)
 
-        self._app.info(spec_set.selection.name)
-        self._app.info(', '.join(self.state['selected']))
+        app.info(spec_set.selection.name)
+        app.info(', '.join(self.state['selected']))
         if spec_set.selection.name in self.state['selected']:
             self.set_unsaved()
 
@@ -208,17 +446,27 @@ class ModuleSelector(QtGui.QWidget):
 
     def on_save_clicked(self):
         # Get a list of requirements
-        requirements = []
+        requires = []
         for spec_set in self.state['selected'].values():
-            requirements.append(spec_set.selection.qual_name)
+            requires.append(spec_set.selection.qual_name)
+
+        env = self.state['environment']
 
         try:
-            self._app.info('Saving modules:\n' + '\n'.join(requirements))
-            self._app.set_project_modules(
-                self._app.tank.project_path,
-                sorted(requirements),
+            app.info(
+                ('Saving %s:\n' % env['code'])
+                + '\n'.join(requires)
             )
+            upd_env = app.io.update_environment(
+                code=env['code'],
+                engine=self.engine_list.currentText(),
+                requires=' '.join(requires),
+                project=env.get('project', app.context.project),
+                id=env.get('id', None)
+            )
+            # Update env in state
+            env.update(upd_env)
             self.set_saved()
         except Exception:
-            self._app.execption('Failed to save project modules...')
+            app.execption('Failed to save project modules...')
             self.set_saved('Failed to save project modules...')
