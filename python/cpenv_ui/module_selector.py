@@ -386,14 +386,11 @@ class ModuleSelector(QtGui.QWidget):
 
     def on_env_import_clicked(self):
         app.info('Import clicked.')
-        try:
-            importer = EnvImporter(self)
-            accepted = importer.exec_()
-            if accepted:
-                # Refresh the entire UI
-                self.set_state_from_context(app.context)
-        except:
-            app.exception('EnvImporter failure.')
+        importer = EnvImporter(self)
+        accepted = importer.exec_()
+        if accepted:
+            # Refresh the entire UI
+            self.set_state_from_context(app.context)
 
     def on_env_changed(self, index):
         env = self.state['environment']

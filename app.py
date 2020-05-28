@@ -10,8 +10,11 @@ class ModuleSpecSet(object):
     '''A set of ModuleSpecs.
 
     Maintains a selection of one of the ModuleSpecs in the set. Used to manage
-    multiple versions of a Module.
+    multiple versions of a single Module.
     '''
+
+    # TODO: This is a very useful class - should be moved into the cpenv to be
+    #       used in a standalone cpenv qt application.
 
     def __init__(self, module_specs):
         self.module_specs = module_specs
@@ -75,15 +78,23 @@ class CpenvApplication(sgtk.platform.Application):
         self.ui.module_selector.show(self)
 
     def info(self, message, *args):
+        '''Log info prefixed with tk-cpenv:'''
+
         self.logger.info('tk-cpenv: %s' % (message % args))
 
     def debug(self, message, *args):
+        '''Log debug prefixed with tk-cpenv:'''
+
         self.logger.debug('tk-cpenv: %s' % (message % args))
 
     def error(self, message, *args):
+        '''Log error prefixed with tk-cpenv:'''
+
         self.logger.error('tk-cpenv: %s' % (message % args))
 
     def exception(self, message, *args):
+        '''Log exception prefixed with tk-cpenv:'''
+
         self.logger.exception('tk-cpenv: %s' % (message % args))
 
     def parse_requires(self, requires):
@@ -112,7 +123,7 @@ class CpenvApplication(sgtk.platform.Application):
     def activate(self, *args, **kwargs):
         '''Wraps cpenv.activate'''
 
-        self.debug('Activating %s' % args)
+        self.debug('Activating modules...')
         try:
             return self.cpenv.activate(*args, **kwargs)
         except Exception:
@@ -158,7 +169,7 @@ class CpenvApplication(sgtk.platform.Application):
 
         # If the engine is in the enabled_engines activate modules.
         engine = software_entity.get('engine', engine_name)
-        env = self.get_environment(engine=engine)
+        env = self.io.get_environment(engine=engine)
         if not env:
             self.debug('Found no environment for %s.' % engine)
             return
@@ -168,8 +179,9 @@ class CpenvApplication(sgtk.platform.Application):
             self.debug('Environment %s has no requirements.' % env['code'])
             return
 
+        self.debug('Activating environment "%s"' % env['code'])
         modules = self.activate(self.cpenv.parse_redirect(requires))
-        self.debug('Activated: %s' % [m.qual_name for m in modules])
+        self.debug('Modules: %s' % [m.qual_name for m in modules])
 
 
 class CpenvIO(object):
@@ -189,9 +201,9 @@ class CpenvIO(object):
         app.cpenv.add_repo(self.repo)
 
     def get_projects(self):
-        '''Get a list of all active projects.'''
+        '''Get a list of all active projects sorted by name.'''
 
-        return self.shotgun.find(
+        entities = self.shotgun.find(
             'Project',
             filters=[
                 ['is_demo', 'is', False],
@@ -200,6 +212,9 @@ class CpenvIO(object):
             ],
             fields=['name', 'id', 'type'],
         )
+        if not entities:
+            return []
+        return list(sorted(entities, key=lambda e: e['name']))
 
     def get_environment(self, name=None, engine=None, project=None):
         '''Get an Environment for the specified engine and project.
