@@ -27,7 +27,6 @@ class ModuleList(QtGui.QTreeWidget):
 
     def __init__(self, name, parent=None):
         super(ModuleList, self).__init__(parent=parent)
-        self._app = sgtk.platform.current_bundle()
 
         self.setObjectName(name)
         self.setSortingEnabled(True)

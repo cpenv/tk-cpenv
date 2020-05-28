@@ -1,5 +1,6 @@
 # Standard library imports
 import os
+import traceback
 
 # Shotgun imports
 import sgtk
@@ -50,6 +51,29 @@ class CpenvApplication(sgtk.platform.Application):
 
     ModuleSpecSet = ModuleSpecSet
 
+    def init_app(self):
+        self.ui = self.import_module('cpenv_ui')
+        self.cpenv = self.import_module('cpenv')
+
+        # Setup UIReporter
+        class _UIReporter(self.ui.UIReporter, self.cpenv.Reporter):
+            '''Mix UIReporter with Reporter base class.'''
+        self.cpenv.set_reporter(_UIReporter)
+
+        # Setup ShotgunRepo
+        self.io = CpenvIO(self)
+
+        # Register Set Modules command to show the ModuleSelector dialog
+        self.engine.register_command(
+            'Set Modules',
+            self.show_module_selector,
+        )
+
+    def show_module_selector(self):
+        '''Show the ModuleSelector dialog.'''
+
+        self.ui.module_selector.show(self)
+
     def info(self, message, *args):
         self.logger.info('tk-cpenv: %s' % (message % args))
 
@@ -62,37 +86,47 @@ class CpenvApplication(sgtk.platform.Application):
     def exception(self, message, *args):
         self.logger.exception('tk-cpenv: %s' % (message % args))
 
-    def init_app(self):
-        self._ui = self.import_module('cpenv_ui')
-        self._cpenv = self.import_module('cpenv')
+    def parse_requires(self, requires):
+        '''Wraps cpenv.parse_redirect'''
 
-        # Setup UIReporter
-        class _UIReporter(self._ui.UIReporter, self._cpenv.Reporter):
-            '''Mix UIReporter with Reporter base class.'''
-        self._cpenv.set_reporter(_UIReporter)
+        self.debug('Parsing %s' % requires)
+        try:
+            return self.cpenv.parse_redirect(requires)
+        except Exception:
+            self.exception('Failed to parse requirements...')
 
-        # Setup ShotgunRepo
-        self._repo = self._cpenv.ShotgunRepo(
-            name='tk-cpenv',
-            api=self.sgtk.shotgun,
-        )
-        self._cpenv.add_repo(self._repo)
+    def resolve(self, *args, **kwargs):
+        '''Wraps cpenv.resolve'''
 
-        # Register Set Modules command to show the ModuleSelector dialog
-        self.engine.register_command(
-            'Set Modules',
-            self.show_module_selector,
-        )
+        self.debug('Resolving %s' % args)
+        try:
+            return self.cpenv.resolve(*args, **kwargs)
+        except Exception:
+            err = self.ui.dialogs.ErrorDialog(
+                label='Failed to resolve modules...',
+                message=traceback.format_exc(),
+                parent=self,
+            )
+            err.exec_()
 
-    def show_module_selector(self):
-        '''Show the ModuleSelector dialog.'''
+    def activate(self, *args, **kwargs):
+        '''Wraps cpenv.activate'''
 
-        self._ui.module_selector.show(self)
+        self.debug('Activating %s' % args)
+        try:
+            return self.cpenv.activate(*args, **kwargs)
+        except Exception:
+            err = self.ui.dialogs.ErrorDialog(
+                label='Failed to activate modules...',
+                message=traceback.format_exc(),
+                parent=self,
+            )
+            err.exec_()
 
     def set_module_paths(self, module_paths):
         '''Set additional paths to use for looking up cpenv modules.'''
 
-        new_module_paths = self._cpenv.get_module_paths()
+        new_module_paths = self.cpenv.get_module_paths()
         for module_path in module_paths[::-1]:
             if module_path not in new_module_paths:
                 new_module_paths.insert(0, module_path)
@@ -100,62 +134,21 @@ class CpenvApplication(sgtk.platform.Application):
 
         self.debug('set module paths to %s' % os.getenv('CPENV_MODULE_PATHS'))
 
-    def get_modules(self):
-        '''Wraps cpenv.get_modules'''
-
-        return self._cpenv.get_modules()
-
-    def get_module_spec_sets(self):
-        '''Get a list of ModuleSpecSets.'''
-
-        sets = {}
-        for module_spec in self._repo.list():
-            spec_set = sets.setdefault(
-                module_spec.name,
-                ModuleSpecSet([module_spec])
-            )
-            spec_set.add(module_spec)
-        return list(sets.values())
-
-    def get_active_modules(self):
-        '''Wraps cpenv.get_modules'''
-
-        return self._cpenv.get_active_modules()
-
-    def get_project_modules(self, project_path):
-        '''Return a list of modules this project has set.'''
-        try:
-            resolved = self._cpenv.resolve([project_path])
-            return resolved
-        except self._cpenv.ResolveError as e:
-            self.error('Failed to resolve modules from %s' % project_path)
-            self.exception(e.message)
-            return []
-
-    def set_project_modules(self, project_path, modules):
-        '''Write modules to the projects root directory.'''
-
-        module_path = os.path.join(project_path, '.cpenv')
-        self.debug('Writing modules to %s' % module_path)
-        with open(module_path, 'w') as f:
-            f.write('\n'.join(modules))
-
-    def resolve(self, *args, **kwargs):
-        '''Wraps cpenv.resolve'''
-
-        self.debug('Resolving %s' % args)
-        return self._cpenv.resolve(*args, **kwargs)
-
-    def activate(self, *args, **kwargs):
-        '''Wraps cpenv.activate'''
-
-        self.debug('Activating %s' % args)
-        return self._cpenv.activate(*args, **kwargs)
-
-    def before_app_launch(self, app_path, app_args, version, engine_name,
-                          software_entity=None, **kwargs):
+    def before_app_launch(
+        self,
+        app_path,
+        app_args,
+        version,
+        engine_name,
+        software_entity=None,
+        **kwargs
+    ):
         '''Call in your tk-multi-launchapp before_app_launch Hook to
-        activate modules you have configured for your project.'''
+        activate modules you have configured for your project.
+
+        See Also:
+            example_config/hooks/before_app_launch.py
+        '''
 
         self.debug('Running before_app_launch')
 
@@ -164,13 +157,179 @@ class CpenvApplication(sgtk.platform.Application):
         self.set_module_paths(module_paths)
 
         # If the engine is in the enabled_engines activate modules.
-        enabled_engines = self.get_setting('enabled_engines') or []
-        software_entity = software_entity or {}
-        if software_entity.get('engine', engine_name) in enabled_engines:
-            modules = self.activate([self.tank.project_path])
-            self.debug('Activated: %s' % [m.qual_name for m in modules])
-        else:
-            self.debug(
-                'Skipping activation - %s not in enabled_engines(%s).' %
-                (engine_name, enabled_engines)
+        engine = software_entity.get('engine', engine_name)
+        env = self.get_environment(engine=engine)
+        if not env:
+            self.debug('Found no environment for %s.' % engine)
+            return
+
+        requires = env['sg_requires']
+        if not requires:
+            self.debug('Environment %s has no requirements.' % env['code'])
+            return
+
+        modules = self.activate(self.cpenv.parse_redirect(requires))
+        self.debug('Activated: %s' % [m.qual_name for m in modules])
+
+
+class CpenvIO(object):
+    '''Handles all IO operations for CpenvApplication.'''
+
+    def __init__(self, app):
+        self.app = app
+        self.cpenv = app.cpenv
+        self.shotgun = app.shotgun
+        self.module_entity = app.get_setting('module_entity')
+        self.environment_entity = app.get_setting('environment_entity')
+        self.repo = app.cpenv.ShotgunRepo(
+            name='tk-cpenv',
+            api=app.shotgun,
+            module_entity=self.app.get_setting('module_entity'),
+        )
+        app.cpenv.add_repo(self.repo)
+
+    def get_projects(self):
+        '''Get a list of all active projects.'''
+
+        return self.shotgun.find(
+            'Project',
+            filters=[
+                ['is_demo', 'is', False],
+                ['is_template', 'is', False],
+                ['archived', 'is', False],
+            ],
+            fields=['name', 'id', 'type'],
+        )
+
+    def get_environment(self, name=None, engine=None, project=None):
+        '''Get an Environment for the specified engine and project.
+
+        Arguments:
+            engine (str): toolkit engine name like tk-maya
+            project (dict): Project data (default: context.project)
+            name (str): Name of the environment to lookup
+
+        Returns:
+            dict: Environment entity
+        '''
+
+        if (name, engine) == (None, None):
+            raise ValueError('Missing required argument: name or engine')
+
+        # Build filters
+        filters = [['project', 'is', project or self.app.context.project]]
+        if name:
+            filters.append(['code', 'is', name])
+        if engine:
+            filters.append(['sg_engine', 'is', engine])
+
+        return self.shotgun.find_one(
+            self.environment_entity,
+            filters=filters,
+            fields=['code', 'sg_engine', 'id', 'sg_requires', 'project'],
+        )
+
+    def get_environments(self, project=None):
+        '''Get a list Environment entities for a project.
+
+        Arguments:
+            project (dict): Project data (default: context.project)
+
+        Returns:
+            list[dict]: Environment entities sorted by code(name).
+        '''
+
+        entities = self.shotgun.find(
+            self.environment_entity,
+            filters=[['project', 'is', project or self.app.context.project]],
+            fields=['code', 'sg_engine', 'id', 'sg_requires', 'project'],
+        )
+        if not entities:
+            return []
+
+        return list(sorted(entities, key=lambda e: e['code']))
+
+    def update_environment(self, code, engine, requires, project, id=None):
+        '''Create or update an environment.
+
+        Arguments:
+            code (str): Name of the Environment to create
+            engine (str): Toolkit engine that the env applies to
+            requires (str): Space separated list of module requirements
+            project (dict): Project data including id key
+            id (int): Id of Environment to update. Will attempt to find an id
+                if none is provided using code and project. If an id is not
+                found a new Environment will be created.
+
+        Returns:
+            dict: Environment data
+        '''
+
+        entity_type = self.environment_entity
+        data = {
+            'code': code,
+            'sg_engine': engine,
+            'sg_requires': requires,
+            'project': project,
+        }
+
+        if not id:
+            entity = self.shotgun.find_one(
+                entity_type,
+                filters=[
+                    ['code', 'is', code],
+                    ['project', 'is', project or self.app.context.project],
+                ],
             )
+            if entity:
+                id = entity['id']
+
+        if id:
+            entity = self.shotgun.update(
+                entity_type,
+                entity_id=id,
+                data=data,
+            )
+        else:
+            entity = self.shotgun.create(
+                entity_type,
+                data=data,
+            )
+        return entity
+
+    def delete_environment(self, id):
+        '''Delete an Environment by id.'''
+
+        self.shotgun.delete(
+            self.environment_entity,
+            id,
+        )
+
+    def get_engines(self):
+        '''Get a list of engine names from configured Software entities.'''
+
+        entities = self.shotgun.find('Software', [], ['engine'])
+        if not entities:
+            return []
+
+        return list(
+            sorted(set([e['engine'] for e in entities if e['engine']]))
+        )
+
+    def get_module_spec_sets(self):
+        '''Get a list of all the Modules stored in Shotgun.
+
+        Returns:
+            list[ModuleSpecSet]: each ModuleSpecSet contains all versions
+                of a particular Module.
+        '''
+
+        sets = {}
+        for module_spec in self.repo.list():
+            spec_set = sets.setdefault(
+                module_spec.name,
+                ModuleSpecSet([module_spec])
+            )
+            spec_set.add(module_spec)
+
+        return list(sets.values())

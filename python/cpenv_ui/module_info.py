@@ -11,12 +11,13 @@ from sgtk.platform.qt import QtCore, QtGui
 # Local imports
 from . import res
 
+app = sgtk.platform.current_bundle()
+
 
 class ModuleInfo(QtGui.QWidget):
 
     def __init__(self, parent=None):
         super(ModuleInfo, self).__init__(parent=parent)
-        self._app = sgtk.platform.current_bundle()
         self._spec = None
         self._default_icon = QtGui.QPixmap(res.get_path('module_256.png'))
 
@@ -125,7 +126,7 @@ class ModuleInfo(QtGui.QWidget):
 
         # Format environment
         if data['environment']:
-            environment = self._app._cpenv.vendor.yaml.safe_dump(
+            environment = app.cpenv.vendor.yaml.safe_dump(
                 data['environment'],
                 default_flow_style=False,
                 sort_keys=False,
@@ -140,12 +141,10 @@ class ModuleInfo(QtGui.QWidget):
         try:
             self.icon.setPixmap(self.get_thumbnail(spec))
         except Exception:
-            self._app.exception('X')
+            app.exception('X')
 
     def get_thumbnail(self, spec):
         '''Download thumbnail and return QPixmap for spec.'''
-
-        cpenv = self._app._cpenv
 
         # We need to construct a url since the shotgun api only
         # returns a url for a low res thumbnail.
@@ -154,12 +153,15 @@ class ModuleInfo(QtGui.QWidget):
         thumbnail_url = base_url + thumbnail
 
         # Ensure icons cache dir exists
-        icons_root = cpenv.get_cache_path('icons')
+        icons_root = app.cpenv.get_cache_path('icons')
         if not os.path.isdir(icons_root):
             os.makedirs(icons_root)
 
         # Download and cache thumbnail locally
-        icon_path = cpenv.get_cache_path('icons', spec.qual_name + '_icon.png')
+        icon_path = app.cpenv.get_cache_path(
+            'icons',
+            spec.qual_name + '_icon.png',
+        )
         if not os.path.isfile(icon_path):
             try:
                 data = spec.repo.shotgun.download_attachment(
@@ -175,7 +177,7 @@ class ModuleInfo(QtGui.QWidget):
     def get_size(self, spec):
         '''Query Shotgun for archive size.'''
 
-        return int(spec.repo.shotgun.find_one(
+        return int(app.shotgun.find_one(
             spec.repo.module_entity,
             filters=[
                 ['code', 'is', spec.name],

@@ -17,8 +17,8 @@ class ProgressDialog(QtGui.QDialog):
         self.setWindowTitle('cpenv')
         self.setWindowIcon(QtGui.QIcon(res.get_path('module_256.png')))
         self.setWindowFlags(
-            self.windowFlags() |
-            QtCore.Qt.WindowStaysOnTopHint
+            self.windowFlags()
+            | QtCore.Qt.WindowStaysOnTopHint
         )
         self.hide_timer = None
 
@@ -87,10 +87,10 @@ class ProgressDialog(QtGui.QDialog):
             self.progress.setFormat('{:0.0f}%'.format(percent))
         self.pump()
 
-    def error(self, message):
+    def error(self, label, message):
         self.label.setText('Error.')
         QtCore.QTimer.singleShot(1000, self.reject)
-        error_message = ErrorDialog(message, self.parent())
+        error_message = ErrorDialog(label, message, self.parent())
         error_message.exec_()
 
     def cancel(self):
@@ -101,17 +101,17 @@ class ProgressDialog(QtGui.QDialog):
 
 class ErrorDialog(QtGui.QDialog):
 
-    def __init__(self, message, parent):
+    def __init__(self, label, message, parent):
         super(ErrorDialog, self).__init__(parent)
 
         self.setWindowTitle('Error')
-        self.setWindowIcon(QtGui.QIcon(res.get_path('module_256.png')))
+        self.setWindowIcon(QtGui.QIcon(res.get_path('module_dark_256.png')))
         self.setWindowFlags(
-            self.windowFlags() |
-            QtCore.Qt.WindowStaysOnTopHint
+            self.windowFlags()
+            | QtCore.Qt.WindowStaysOnTopHint
         )
 
-        self.label = QtGui.QLabel('Failed to encode!')
+        self.label = QtGui.QLabel(label)
         self.text = QtGui.QPlainTextEdit(message)
         self.text.setTextInteractionFlags(QtCore.Qt.TextBrowserInteraction)
 
