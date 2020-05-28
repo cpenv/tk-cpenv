@@ -19,8 +19,9 @@ variable to choose which plugin to provision at runtime.
 # Features
 - Store modules directly in your shotgun site
 - Localize modules when launching applications
-- Configure Environments (a list of modules) to be activated per job and toolkit engine.
-- Import Environments from other jobs. Making it easy to setup new jobs.
+- Build Environments (a list of modules) to be activated per job and toolkit engine.
+- Drag and drop modules to build environments.
+- Import Environments from other jobs, making it easy to setup new jobs.
 
 # Configuring tk-cpenv
 The example_config folder includes modifications you need to make to your
