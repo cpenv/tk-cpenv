@@ -1,13 +1,16 @@
 # Add this file to your env/includes/settings
+# home_path: Where to store modules locally. Defaults to C:/ProgramData/cpenv on Windows, /Library/Application Support/cpenv on Mac, /usr/local/share/cpenv or /usr/share/cpenv on Linux OR the value of CPENV_HOME envvar.
+# module_paths: Additional paths used to resolve modules.
+# module_entity: Name of the CustomNonProjectEntity named "Module".
+# environment_entity: Name of the CustomEntity named "Environment".
+
 
 includes:
 - ../app_locations.yml
 
 settings.tk-cpenv:
   location: "@apps.tk-cpenv.location"
-  enabled_engines:
-    - tk-maya
-    - tk-nuke
-    - tk-houdini
-  module_entity: "CustomNonProjectEntity01"
+  home_path: ""
   module_paths: []
+  module_entity: "CustomNonProjectEntity01"
+  environment_entity: "CustomProjectEntity01"

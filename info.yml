@@ -14,7 +14,7 @@
 configuration:
   home_path:
     type: str
-    description: Where to store modules locally.
+    description: Where to store modules locally. Defaults to C:/ProgramData/cpenv on Windows, /Library/Application Support/cpenv on Mac, /usr/local/share/cpenv or /usr/share/cpenv on Linux OR the value of CPENV_HOME envvar.
     default_value: ''
     required: False
   module_paths:

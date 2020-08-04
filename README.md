@@ -30,7 +30,7 @@ environment_entity keys will be specific to your shotgun site.
 
 ## tk-cpenv settings
 - **home_path**: Where to store modules locally. Defaults to a local path available across all users on your machine. You may choose to use a network location here, so that all users in a network share modules.
-- **module_paths**: List of additional paths used to lookup modules. Can be useful when developing modules.
+- **module_paths**: List of additional paths used to lookup modules.
 - **module_entity**: Name of the CustomNonProjectEntity named "Module".
 - **environment_entity**: Name of the CustomEntity named "Environment".
 
@@ -56,7 +56,70 @@ environment_entity keys will be specific to your shotgun site.
 3. Set the value of the `environment_entity` to match the `CustomEntity` you enabled. This would be `CustomEntity03` according to the image above.
 
 # Developing and publishing modules
-The best practice is to use the cpenv cli tool to create, test, and publish
-modules to your shotgun site.
+Use the cpenv cli tool to create, test, and publish modules to your shotgun site. Only modules published to your site will appear in the Set Modules dialog.
+
+## Configure a ShotgunRepo with the cpenv cli
+In order to publish to your shotgun site, you'll need to configure a ShotgunRepo.
+1. [Create a Shotgun script.](https://support.shotgunsoftware.com/hc/en-us/articles/219031368-Create-and-manage-API-scripts) Make sure the name of your script makes it clear what it will be used for, I named mine "cpenv".
+2. Execute the following cli command using your own repo_name, baseurl, script_name, api_key and module_entity.
+```
+> cpenv repo add my_shotgun --type=shotgun --base_url=https://my.shotgunstudio.com --script_name=cpenv --api_key=<your_script_key> --module_entity=CustomNonProjectEntity01
+```
+
+If all is well, you should now see your new ShotgunRepo when running `cpenv repo list`.
+
+## Create your first module
+Let's create a quick test module named "my_first_module" in a temporary directory.
+```
+> mkdir tmp
+> cd tmp
+> cpenv create my_first_module
+...
+> cd my_first_module
+```
+
+Next open the module.yml file and modify the environment section.
+
+> Tip: If you use sublime text use `subl .` to open the current directory in sublime text. You can also use `cpenv edit "some_module"` to quickly open a published module in sublime text. You can configure your own text editor by setting the `CPENV_EDITOR` environment variable.
+
+```
+name: my_first_module
+version: 0.1.0
+description: 'My very first module'
+author: 'Me'
+email: 'me@memail.com'
+requires: []
+environment:
+  MY_FIRST_VAR: 'HelloWorld'
+```
+Include an icon.png file and that will be used as a thumbnail when you publish your module.
+
+## Test your module
+Activate your module to test it. You can use `cpenv activate .` to activate the current working directory.
+
+```
+> cpenv activate .
+# Windows Powershell
+> $env:MY_FIRST_VAR
+# Bash
+> echo $MY_FIRST_VAR
+```
+
+## Publish your first module
+Now that we have a working module, let's publish it to Shotgun.
+```
+> cpenv publish my_first_module
+
+  [0] cwd - C:/Users/user
+  [1] user - C:/Users/user/AppData/Local/cpenv/modules
+  [2] home - C:/ProgramData/cpenv/modules
+  [3] my_shotgun - https://my.shotgunstudio.com
+
+Choose a repo to publish to [2]: 3
+```
+
+This should upload your module to Shotgun and you'll be able to see it in the Set Modules dialog.
+
+To quickly verify that your module has been uploaded, you can use the `cpenv list` command.
 
 [Visit the cpenv repository for more info.](https://github.com/cpenv/cpenv)
