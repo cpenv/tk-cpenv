@@ -21,6 +21,7 @@ variable to choose which plugin to provision at runtime.
 - Localize modules when launching applications
 - Build Environments (a list of modules) to be activated per job and toolkit engine.
 - Drag and drop modules to build environments.
+- Preview combined environment variables.
 - Import Environments from other jobs, making it easy to setup new jobs.
 
 # Configuring tk-cpenv
@@ -123,3 +124,20 @@ This should upload your module to Shotgun and you'll be able to see it in the Se
 To quickly verify that your module has been uploaded, you can use the `cpenv list` command.
 
 [Visit the cpenv repository for more info.](https://github.com/cpenv/cpenv)
+
+
+# Using the Set Modules dialog
+1. Create an Environment and set an engine for it.
+
+<img src="https://github.com/cpenv/tk-cpenv/blob/master/images/1_add_new_environment.png" width="461"/>
+
+2. Drag and drop modules to build your Environment. The order of the modules here is important. Modules later in the list can override environment variables set earlier in the list. You can drag and drop to reorder them or move them back to the Available Modules list to remove them from the environment.
+
+<img src="https://github.com/cpenv/tk-cpenv/blob/master/images/2_drag_and_drop_modules.png" width="80%"/>
+
+3. Use the Preview Environment tool to view the combined environment variables for your Environment.
+
+<img src="https://github.com/cpenv/tk-cpenv/blob/master/images/3_preview_env_tool.png" width="432"/>
+<img src="https://github.com/cpenv/tk-cpenv/blob/master/images/preview_env_dialog.png" width="80%"/>
+
+4. Save your changes! You're ready to launch some software.
