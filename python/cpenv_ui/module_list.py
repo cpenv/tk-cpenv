@@ -62,11 +62,23 @@ class ModuleList(QtGui.QTreeWidget):
             yield self.topLevelItem(i)
 
     def dropEvent(self, event):
-        for item in event.source().selectedItems():
-            self.add_spec_set(item.spec_set)
+
+        index = self.indexAt(event.pos())
+        indicator = self.dropIndicatorPosition()
+
+        if indicator in (self.OnItem, self.AboveItem):
+            for item in reversed(event.source().selectedItems()):
+                self.insert_spec_set(index.row(), item.spec_set)
+        elif indicator is self.BelowItem:
+            for item in reversed(event.source().selectedItems()):
+                self.insert_spec_set(index.row() + 1, item.spec_set)
+        else:
+            for item in event.source().selectedItems():
+                self.add_spec_set(item.spec_set)
 
         # We need to return prior to emitting item_dropped to ensure that
-        # our list modifications have taken place
+        # our list modifications have taken place. An alternative may be
+        # to connect to item_dropped using QueuedConnection. Try it sometime!
         QtCore.QTimer.singleShot(200, self.item_dropped.emit)
 
         return event.accept()
@@ -76,15 +88,15 @@ class ModuleList(QtGui.QTreeWidget):
         item.spec_set.select(index)
         self.version_changed.emit(item.spec_set)
 
-    def add_spec_set(self, spec_set):
+    def create_item(self, spec_set):
         item = QtGui.QTreeWidgetItem(parent=self)
         item.spec_set = spec_set
         item.setText(Name, spec_set.selection.name)
         item.setText(Version, spec_set.selection.version.string)
         item.setFlags(
-            QtCore.Qt.ItemIsSelectable |
-            QtCore.Qt.ItemIsEnabled |
-            QtCore.Qt.ItemIsDragEnabled
+            QtCore.Qt.ItemIsSelectable
+            | QtCore.Qt.ItemIsEnabled
+            | QtCore.Qt.ItemIsDragEnabled
         )
 
         # Add versions combobox
@@ -98,6 +110,16 @@ class ModuleList(QtGui.QTreeWidget):
             item
         ))
 
+        return item
+
+    def insert_spec_set(self, index, spec_set):
+        item = self.create_item(spec_set)
+        self.insertTopLevelItem(index, item)
+        self.setItemWidget(item, Version, item.combo_box)
+        return item
+
+    def add_spec_set(self, spec_set):
+        item = self.create_item(spec_set)
         self.addTopLevelItem(item)
         self.setItemWidget(item, Version, item.combo_box)
         return item

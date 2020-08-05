@@ -2,8 +2,11 @@
 from __future__ import print_function
 
 # Standard library imports
-import traceback
+from collections import OrderedDict
 from functools import partial
+from string import Template
+import sys
+import traceback
 
 # Shotgun imports
 import sgtk
@@ -60,7 +63,7 @@ class ModuleSelector(QtGui.QWidget):
             'environments': [],  # Project environments
             'engines': [],  # Name of available engines
             'available': {},  # Full list of available modules
-            'selected': {},  # List of modules to activate on app launch
+            'selected': OrderedDict(),  # List of modules to activate on launch
         }
 
         # Create widgets
@@ -116,6 +119,7 @@ class ModuleSelector(QtGui.QWidget):
             'These will be activated when launching the associated engine.'
         )
         self.selected_list = ModuleList('selected', parent=self)
+        self.selected_list.setSortingEnabled(False)
 
         self.module_info = ModuleInfo(parent=self)
 
@@ -293,8 +297,15 @@ class ModuleSelector(QtGui.QWidget):
         self.state['unsaved_changes'] = False
         QtCore.QTimer.singleShot(2000, self.message_label.hide)
 
-    def on_selection_changed(self, widget):
+    def on_selected_order_changed(self):
+        # Reflect user reordering in state
+        self.state['selected'].clear()
+        for item in self.selected_list.iter_items():
+            self.state['selected'][item.text(0)] = item.spec_set
 
+        self.set_unsaved()
+
+    def on_selection_changed(self, widget):
         # Deselect items in the opposite list
         if widget == self.selected_list:
             app.info('Selected List changed.')
@@ -428,14 +439,16 @@ class ModuleSelector(QtGui.QWidget):
             self.set_unsaved()
 
     def on_item_dropped(self):
-        old_keys = set(self.state['selected'].keys())
-        new_keys = set()
+
+        old_keys = list(self.state['selected'].keys())
+        new_keys = []
+
         self.state['selected'].clear()
 
         # Update selected state
         for item in self.selected_list.iter_items():
             module_name = item.text(0)
-            new_keys.add(module_name)
+            new_keys.append(module_name)
             self.state['selected'][module_name] = item.spec_set
 
         if new_keys != old_keys:
