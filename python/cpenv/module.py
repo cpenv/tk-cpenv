@@ -8,7 +8,7 @@ from collections import namedtuple
 from string import Template
 
 # Local imports
-from . import compat, mappings, paths, repos
+from . import compat, mappings, paths
 from .versions import ParseError, Version, default_version, parse_version
 from .hooks import HookFinder, get_global_hook_path
 from .vendor import yaml
@@ -38,7 +38,8 @@ class Module(object):
 
         self.path = paths.normalize(path)
         if repo is None:
-            self.repo = repos.LocalRepo('tmp', paths.parent(self.path))
+            from .repos import LocalRepo
+            self.repo = LocalRepo('tmp', paths.parent(self.path))
         else:
             self.repo = repo
 
@@ -329,11 +330,11 @@ def is_exact_match(requirement, module_spec):
 
     name, version = parse_module_requirement(requirement)
     return (
-        module_spec.qual_name == requirement or
-        module_spec.real_name == requirement or
-        (
-            version and module_spec.name == name and
-            module_spec.version == version
+        module_spec.qual_name == requirement
+        or module_spec.real_name == requirement
+        or (
+            version and module_spec.name == name
+            and module_spec.version == version
         )
     )
 

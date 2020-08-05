@@ -16,6 +16,10 @@ from .reporter import *
 from .resolver import *
 from .versions import *
 from . import vendor
+from . import paths
+from . import compat
+from . import hooks
+from . import mappings
 
 
 # Initialize cpenv
