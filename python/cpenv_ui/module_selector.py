@@ -15,6 +15,7 @@ from sgtk.platform.qt import QtCore, QtGui
 # Local imports
 from .dialogs import ErrorDialog
 from .env_importer import EnvImporter
+from .env_display import EnvDisplay
 from .module_list import ModuleList
 from .module_info import ModuleInfo
 from . import res
@@ -93,11 +94,16 @@ class ModuleSelector(QtGui.QWidget):
             icon=QtGui.QIcon(res.get_path('remove.png'))
         )
         self.env_remove.setToolTip('Delete current environment.')
+        self.env_preview = QtGui.QToolButton(
+            icon=QtGui.QIcon(res.get_path('preview.png'))
+        )
+        self.env_preview.setToolTip('Preview combined environment variables.')
         self.env_header = QtGui.QHBoxLayout()
         self.env_header.addWidget(self.env_label)
         self.env_header.addWidget(self.env_import)
         self.env_header.addWidget(self.env_add)
         self.env_header.addWidget(self.env_remove)
+        self.env_header.addWidget(self.env_preview)
 
         self.engine_label = QtGui.QLabel('Engine')
         self.engine_label.setToolTip(
@@ -171,6 +177,7 @@ class ModuleSelector(QtGui.QWidget):
         self.env_import.clicked.connect(self.on_env_import_clicked)
         self.env_add.clicked.connect(self.on_env_add_clicked)
         self.env_remove.clicked.connect(self.on_env_remove_clicked)
+        self.env_preview.clicked.connect(self.on_env_preview_clicked)
         self.env_list.activated.connect(self.on_env_changed)
 
         # Update initial state from app context
@@ -326,6 +333,58 @@ class ModuleSelector(QtGui.QWidget):
                 self.module_info.set_module_spec(spec)
         else:
             self.module_info.clear_module_spec()
+
+    def on_env_preview_clicked(self):
+        '''In order to preview an environment we need to take the same steps
+        cpenv takes when combining module environments during activation, but,
+        we must do so without having the module localized.
+
+        TODO: Because of how complex it is to build the environment preview, I
+              feel that this aspect of cpenv may need to be refactored.
+        '''
+        env = self.state['environment']
+        home_path = app.cpenv.get_home_modules_path()
+        platform = app.cpenv.compat.platform
+        pyver = sys.version[:3]
+        yaml = app.cpenv.vendor.yaml
+        mappings = app.cpenv.mappings
+
+        module_envs = []
+        for spec_set in self.state['selected'].values():
+            spec = spec_set.selection
+            config_vars = {
+                'MODULE': '/'.join([home_path, spec.qual_name]),
+                'PLATFORM': platform,
+                'PYVER': pyver,
+            }
+            # 1. read environment from Module entity
+            module_env = spec.repo.get_data(spec)['environment']
+            # 2. Dump to string
+            module_env = yaml.safe_dump(module_env)
+            # 3. Substitute config variables
+            module_env = Template(module_env).safe_substitute(config_vars)
+            # 4. Load as dict
+            module_env = yaml.safe_load(module_env)
+            # 5. Preprocess - extracts platform keys
+            module_env = mappings.preprocess_dict(module_env)
+
+            module_envs.append(module_env)
+
+        # Combine all module environments
+        preview_dict = mappings.join_dicts(*module_envs)
+        preview_env = mappings.dict_to_env(preview_dict)
+        preview_env = mappings.expand_envvars(preview_env)
+
+        try:
+            dialog = EnvDisplay(
+                title='Previewing Environment:  %s' % env['code'],
+                data=preview_env,
+                parent=self,
+            )
+            dialog.show()
+        except Exception:
+            app.info('HELLO')
+            app.exception('Error')
 
     def on_env_remove_clicked(self):
 
