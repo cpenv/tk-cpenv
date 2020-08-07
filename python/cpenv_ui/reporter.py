@@ -7,6 +7,10 @@ from .dialogs import ProgressDialog
 class UIReporter(object):
     '''A reporter for cpenv that displays reports in a ProgresDialog.'''
 
+    # Injected during CpenvApplication.__init__
+    app = None
+    engine = None
+
     def __init__(self):
         self._dialog = None
 
@@ -15,7 +19,7 @@ class UIReporter(object):
         '''Get the ProgressDialog'''
 
         if self._dialog is None:
-            self._dialog = ProgressDialog()
+            self._dialog = ProgressDialog(self.engine._get_dialog_parent())
         return self._dialog
 
     def start_resolve(self, requirements):
@@ -31,7 +35,7 @@ class UIReporter(object):
 
         value, max_value = self.dialog.value(), self.dialog.max_value()
         self.dialog.set_frame('{} of {} - {}...'.format(
-            value,
+            value + 1,
             max_value,
             requirement,
         ))
