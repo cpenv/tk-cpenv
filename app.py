@@ -116,7 +116,8 @@ class CpenvApplication(sgtk.platform.Application):
         try:
             return self.cpenv.parse_redirect(requires)
         except Exception:
-            self.exception('Failed to parse requirements...')
+            self.exception('Failed to parse cpenv modules.')
+            raise
 
     def resolve(self, *args, **kwargs):
         '''Wraps cpenv.resolve'''
@@ -125,12 +126,8 @@ class CpenvApplication(sgtk.platform.Application):
         try:
             return self.cpenv.resolve(*args, **kwargs)
         except Exception:
-            err = self.ui.dialogs.ErrorDialog(
-                label='Failed to resolve modules...',
-                message=traceback.format_exc(),
-                parent=self,
-            )
-            err.exec_()
+            self.exception('Failed to resolve cpenv modules.')
+            raise
 
     def activate(self, *args, **kwargs):
         '''Wraps cpenv.activate'''
@@ -139,12 +136,8 @@ class CpenvApplication(sgtk.platform.Application):
         try:
             return self.cpenv.activate(*args, **kwargs)
         except Exception:
-            err = self.ui.dialogs.ErrorDialog(
-                label='Failed to activate modules...',
-                message=traceback.format_exc(),
-                parent=self,
-            )
-            err.exec_()
+            self.exception('Failed to activate cpenv modules.')
+            raise
 
     def set_module_paths(self, module_paths):
         '''Set additional paths to use for looking up cpenv modules.'''
