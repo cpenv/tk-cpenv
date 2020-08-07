@@ -148,7 +148,7 @@ class CpenvApplication(sgtk.platform.Application):
                 new_module_paths.insert(0, module_path)
         os.environ['CPENV_MODULE_PATHS'] = os.pathsep.join(new_module_paths)
 
-        self.debug('set module paths to %s' % os.getenv('CPENV_MODULE_PATHS'))
+        self.debug('Module paths set to %s' % os.getenv('CPENV_MODULE_PATHS'))
 
     def before_app_launch(
         self,
