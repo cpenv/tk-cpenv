@@ -55,7 +55,6 @@ class ModuleSelector(QtGui.QWidget):
     def __init__(self, *args, **kwargs):
         super(ModuleSelector, self).__init__(*args, **kwargs)
 
-        app = sgtk.platform.current_bundle()
         app.info("Launching cpenv module selector...")
 
         # Set initial state
