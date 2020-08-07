@@ -14,7 +14,7 @@ class ProgressDialog(QtGui.QDialog):
         super(ProgressDialog, self).__init__(parent)
 
         # Window options
-        self.setWindowTitle('cpenv')
+        self.setWindowTitle('tk-cpenv')
         self.setWindowIcon(QtGui.QIcon(res.get_path('module_256.png')))
         self.setWindowFlags(
             self.windowFlags()
@@ -98,13 +98,25 @@ class ProgressDialog(QtGui.QDialog):
         self.reject()
         raise RuntimeError(self.label.text() + ' cancelled.')
 
+    def accept(self):
+        super(ErrorDialog, self).accept()
+        self.close()
+
+    def reject(self):
+        super(ErrorDialog, self).reject()
+        self.close()
+
+    @property
+    def hide_tk_title_bar(self):
+        return True
+
 
 class ErrorDialog(QtGui.QDialog):
 
-    def __init__(self, label, message, parent):
+    def __init__(self, label, message, parent=None):
         super(ErrorDialog, self).__init__(parent)
 
-        self.setWindowTitle('Error')
+        self.setWindowTitle('tk-cpenv Error')
         self.setWindowIcon(QtGui.QIcon(res.get_path('module_dark_256.png')))
         self.setWindowFlags(
             self.windowFlags()
@@ -129,3 +141,15 @@ class ErrorDialog(QtGui.QDialog):
         self.layout.addWidget(self.button)
         self.layout.setAlignment(self.button, QtCore.Qt.AlignRight)
         self.setLayout(self.layout)
+
+    def accept(self):
+        super(ErrorDialog, self).accept()
+        self.close()
+
+    def reject(self):
+        super(ErrorDialog, self).reject()
+        self.close()
+
+    @property
+    def hide_tk_title_bar(self):
+        return True
