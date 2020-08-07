@@ -48,20 +48,17 @@ class BeforeAppLaunch(HookBaseClass):
         # Add the following lines of code to your before_app_launch hook
         # if you already have one.
 
-        # Here we get the tk-cpenv app from the current engine.
+        # Get the tk-cpenv app from the current engine.
         self.logger.info('Loading tk-cpenv...')
         tk_cpenv = self.parent.engine.apps.get('tk-cpenv')
 
-        # Now we call the before_app_launch method of the tk-cpenv app
+        # Call the tk-cpenv's before_app_launch method.
         self.logger.info('Running tk-cpenv before_app_launch...')
-        try:
-            tk_cpenv.before_app_launch(
-                app_path,
-                app_args,
-                version,
-                engine_name,
-                software_entity,
-                **kwargs
-            )
-        except Exception:
-            self.logger.exception('Failed to activate cpenv modules.')
+        tk_cpenv.before_app_launch(
+            app_path,
+            app_args,
+            version,
+            engine_name,
+            software_entity,
+            **kwargs
+        )
