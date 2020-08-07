@@ -75,6 +75,15 @@ class CpenvApplication(sgtk.platform.Application):
             self.show_module_selector,
         )
 
+    def show_error(self, label, message):
+        return self.engine.show_modal(
+            title='tk-cpenv Error',
+            bundle=self,
+            widget_class=self.ui.dialogs.ErrorDialog,
+            label=label,
+            message=message,
+        )
+
     def show_module_selector(self):
         '''Show the ModuleSelector dialog.'''
 
