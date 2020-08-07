@@ -156,7 +156,7 @@ class CpenvApplication(sgtk.platform.Application):
         app_args,
         version,
         engine_name,
-        software_entity=None,
+        software_entity,
         **kwargs
     ):
         '''Call in your tk-multi-launchapp before_app_launch Hook to
@@ -166,26 +166,50 @@ class CpenvApplication(sgtk.platform.Application):
             example_config/hooks/before_app_launch.py
         '''
 
-        self.debug('Running before_app_launch')
+
+    def _before_app_launch(
+        self,
+        app_path,
+        app_args,
+        version,
+        engine_name,
+        software_entity,
+        **kwargs
+    ):
+        '''Call in your tk-multi-launchapp before_app_launch Hook to
+        activate modules you have configured for your project.
+
+        See Also:
+            example_config/hooks/before_app_launch.py
+        '''
 
         # Set module paths from shotgun setting
         module_paths = self.get_setting('module_paths') or []
         self.set_module_paths(module_paths)
 
-        # If the engine is in the enabled_engines activate modules.
-        engine = software_entity.get('engine', engine_name)
+        # Get engine name
+        if software_entity:
+            engine = software_entity.get('engine', engine_name)
+        else:
+            engine = engine_name
+
+        # Get Environment for engine
         env = self.io.get_environment(engine=engine)
         if not env:
-            self.debug('Found no environment for %s.' % engine)
+            self.debug('Found no Environment for %s.' % engine)
             return
 
-        requires = env['sg_requires']
-        if not requires:
+        self.debug('Found Environment "%s"' % env['code'])
+
+        # Get Environment requirements
+        requires_str = env['sg_requires']
+        if not requires_str:
             self.debug('Environment %s has no requirements.' % env['code'])
             return
 
-        self.debug('Activating environment "%s"' % env['code'])
-        modules = self.activate(self.cpenv.parse_redirect(requires))
+        # Parse Environment requirements
+        requires = self.parse_requires(requires_str)
+        modules = self.activate(requires)
         self.debug('Modules: %s' % [m.qual_name for m in modules])
 
 
