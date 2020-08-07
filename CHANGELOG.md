@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [v0.3.4](https://github.com/cpenv/tk-cpenv/releases/tag/v0.3.4) ([compare](https://github.com/cpenv/tk-cpenv/compare/v0.3.3...v0.3.4)) - 2020-08-07
+
+### Changed
+- Change: update changelog ([9d40258](https://github.com/cpenv/tk-cpenv/commit/9d40258c7ca0ffa4de80ac7880fb8bb5c91b3add) by Dan Bradham).
+
+### Fixed
+- Fix: #5 - resolve nameerror in on_import_clicked ([a50c093](https://github.com/cpenv/tk-cpenv/commit/a50c093190dc950070b78ed40b96f7131735ce36) by Dan Bradham).
+
+
 ## [v0.3.3](https://github.com/cpenv/tk-cpenv/releases/tag/v0.3.3) ([compare](https://github.com/cpenv/tk-cpenv/compare/v0.3.2...v0.3.3)) - 2020-08-07
 
 ### Added
