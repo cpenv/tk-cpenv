@@ -166,6 +166,21 @@ class CpenvApplication(sgtk.platform.Application):
             example_config/hooks/before_app_launch.py
         '''
 
+        try:
+            self._before_app_launch(
+                app_path,
+                app_args,
+                version,
+                engine_name,
+                software_entity,
+                **kwargs
+            )
+        except Exception:
+            self.exception('tk-cpenv before_app_launch failed.')
+            self.show_error(
+                label='tk-cpenv before_app_launch failed.',
+                message=traceback.format_exc(),
+            )
 
     def _before_app_launch(
         self,
