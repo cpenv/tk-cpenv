@@ -183,7 +183,7 @@ class EnvImporter(QtGui.QDialog):
         app.info('Importing environments to %s...' % project)
         for env in app.io.get_environments():
             app.info('Deleting %s - %s' % (env['id'], env['code']))
-            app.delete_environment(env['id'])
+            app.io.delete_environment(env['id'])
 
         for env in self.state['environments']:
             app.info('Importing %s' % env['code'])
