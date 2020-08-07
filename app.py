@@ -190,7 +190,7 @@ class CpenvApplication(sgtk.platform.Application):
 
 
 class CpenvIO(object):
-    '''Handles all IO operations for CpenvApplication.'''
+    '''Handles all IO operations for tk-cpenv.'''
 
     def __init__(self, app):
         self.app = app
