@@ -4,6 +4,27 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [v0.3.3](https://github.com/cpenv/tk-cpenv/releases/tag/v0.3.3) ([compare](https://github.com/cpenv/tk-cpenv/compare/v0.3.2...v0.3.3)) - 2020-08-07
+
+### Added
+- Add: show_error method ([1901556](https://github.com/cpenv/tk-cpenv/commit/190155697f2c4fddb363bf86913c5c6e5980bbf4) by Dan Bradham).
+- Add: changelog ([4035071](https://github.com/cpenv/tk-cpenv/commit/4035071e843b6654b8e5208c17638694ec301936) by Dan Bradham).
+
+### Changed
+- Change: bump version to v0.3.3 ([94386df](https://github.com/cpenv/tk-cpenv/commit/94386df9bfe985223670c47a323ae43d9872482c) by Dan Bradham).
+- Change: remove try-except block from example before_app_launch ([412cbfc](https://github.com/cpenv/tk-cpenv/commit/412cbfc81d5f8dd5d39d23d6242d7afd1b378046) by Dan Bradham).
+- Change: wrap _before_app_launch in try-except block add: error dialog of _before_app_launch raises an exception ([c826b0b](https://github.com/cpenv/tk-cpenv/commit/c826b0bae5748ce745d91e02798bf1a5a361fced) by Dan Bradham).
+- Change: move before_app_launch functionality into private method also improves legibility of the before_app_launch procedure. ([ff24f79](https://github.com/cpenv/tk-cpenv/commit/ff24f79f44b2305470f2bfc51e623c9c60e3ba64) by Dan Bradham).
+- Change: cpenvio docstring ([d53bc2a](https://github.com/cpenv/tk-cpenv/commit/d53bc2a0be1b5de84e533603cc63f03a3f965da7) by Dan Bradham).
+- Change: tense of log message ([8ee4718](https://github.com/cpenv/tk-cpenv/commit/8ee4718ba4e3b05746a7a107d68985e2f7989bb1) by Dan Bradham).
+- Change: ensure that we log exceptions in key methoods ([9bf0502](https://github.com/cpenv/tk-cpenv/commit/9bf05023534f576eb8cc595e55a4625809a27174) by Dan Bradham).
+- Change: inject app and engine to uireporter class allows us to use engine._get_dialog_parent to ensure we have a valid parent for the progress dialog. ([1fe9ea3](https://github.com/cpenv/tk-cpenv/commit/1fe9ea35ad2ce0992372e7c4e780b12bc07965ef) by Dan Bradham).
+- Change: make sure dialogs can be used with engine.show methods ([247a9e0](https://github.com/cpenv/tk-cpenv/commit/247a9e055a0ea67eb2e84580b9a403382801dc2a) by Dan Bradham).
+
+### Misc
+- Update readme.md ([e5e71d2](https://github.com/cpenv/tk-cpenv/commit/e5e71d2f3a216aba96db0f48e4748ec1f1232949) by Dan Bradham).
+
+
 ## [v0.3.2](https://github.com/cpenv/tk-cpenv/releases/tag/v0.3.2) ([compare](https://github.com/cpenv/tk-cpenv/compare/v0.3.1...v0.3.2)) - 2020-08-05
 
 ### Added
