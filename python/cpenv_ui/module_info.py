@@ -1,17 +1,25 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function
 
-# Standard library imports
-import os
-
 # Shotgun imports
 import sgtk
 from sgtk.platform.qt import QtCore, QtGui
 
 # Local imports
 from . import res
+from .env_tree import EnvTree
+from .minimized_list import MinimizedList
+from .notice import Notice
 
 app = sgtk.platform.current_bundle()
+
+
+class FormLabel(QtGui.QLabel):
+    '''Right aligned label'''
+
+    def __init__(self, *args, **kwargs):
+        super(FormLabel, self).__init__(*args, **kwargs)
+        self.setAlignment(QtCore.Qt.AlignVCenter | QtCore.Qt.AlignRight)
 
 
 class ModuleInfo(QtGui.QWidget):
@@ -37,33 +45,61 @@ class ModuleInfo(QtGui.QWidget):
         self.email.setWordWrap(True)
         self.version = QtGui.QLabel('Version')
         self.size = QtGui.QLabel('Size')
-        self.requires = ContentAwareTextEdit('')
-        self.requires.setTextInteractionFlags(
-            QtCore.Qt.TextBrowserInteraction
-        )
+        self.requires = MinimizedList(parent=self)
+        self.requires.setSelectionMode(self.requires.NoSelection)
         self.requires.setFocusPolicy(QtCore.Qt.NoFocus)
-        self.environment = ContentAwareTextEdit('')
-        self.environment.setTextInteractionFlags(
-            QtCore.Qt.TextBrowserInteraction
+        self.requires_copy = QtGui.QToolButton(
+            icon=QtGui.QIcon(res.get_path('copy.png'))
+        )
+        self.requires_copy.setIconSize(QtCore.QSize(10, 10))
+        self.requires_copy.setToolTip('Copy requires to clipboard.')
+        self.requires_copy.clicked.connect(
+            lambda: self.copy_to_clipboard('requires')
+        )
+        self.environment = EnvTree('module_environment', {}, parent=self)
+        self.environment.setSizePolicy(
+            QtGui.QSizePolicy.Expanding,
+            QtGui.QSizePolicy.Expanding,
         )
         self.environment.setFocusPolicy(QtCore.Qt.NoFocus)
-
+        self.environment.setSelectionMode(self.environment.NoSelection)
+        self.environment_copy = QtGui.QToolButton(
+            icon=QtGui.QIcon(res.get_path('copy.png'))
+        )
+        self.environment_copy.setIconSize(QtCore.QSize(10, 10))
+        self.environment_copy.setToolTip('Copy environment to clipboard.')
+        self.environment_copy.clicked.connect(
+            lambda: self.copy_to_clipboard('environment')
+        )
         header_layout = QtGui.QHBoxLayout()
         header_layout.addWidget(self.icon)
         header_layout.addWidget(self.name)
 
-        info_form = QtGui.QFormLayout()
-        info_form.setLabelAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignTop)
-        info_form.addRow('version:', self.version)
-        info_form.addRow('author:', self.author)
-        info_form.addRow('email:', self.email)
-        info_form.addRow('size:', self.size)
-        info_form.addRow('requires:', QtGui.QLabel(''))
-        info_form.addRow(self.requires)
-        info_form.addRow(QtGui.QLabel('environment:'))
-        info_form.addRow(self.environment)
+        info_grid = QtGui.QGridLayout()
+        info_grid.setColumnStretch(1, 1)
+        info_grid.setRowStretch(7, 1)
+        for i in range(7):
+            info_grid.setRowMinimumHeight(i, 10)
+        info_grid.addWidget(FormLabel('version:'), 0, 0)
+        info_grid.addWidget(self.version, 0, 1)
+        info_grid.addWidget(FormLabel('author:'), 1, 0)
+        info_grid.addWidget(self.author, 1, 1)
+        info_grid.addWidget(FormLabel('email:'), 2, 0)
+        info_grid.addWidget(self.email, 2, 1)
+        info_grid.addWidget(FormLabel('size:'), 3, 0)
+        info_grid.addWidget(self.size, 3, 1)
+        info_grid.addWidget(FormLabel('requires:'), 4, 0)
+        info_grid.addWidget(
+            self.requires_copy, 4, 1, alignment=QtCore.Qt.AlignRight
+        )
+        info_grid.addWidget(self.requires, 5, 0, 1, 2)
+        info_grid.addWidget(FormLabel('environment:'), 6, 0)
+        info_grid.addWidget(
+            self.environment_copy, 6, 1, alignment=QtCore.Qt.AlignRight
+        )
+        info_grid.addWidget(self.environment, 7, 0, 1, 2)
         info_widget = QtGui.QWidget(parent=self)
-        info_widget.setLayout(info_form)
+        info_widget.setLayout(info_grid)
         self.info = QtGui.QScrollArea(parent=self)
         self.info.setFocusPolicy(QtCore.Qt.NoFocus)
         self.info.setWidgetResizable(True)
@@ -94,7 +130,6 @@ class ModuleInfo(QtGui.QWidget):
         self._spec = None
 
     def set_module_spec(self, spec):
-
         # Show info
         self.info.show()
         self._spec = spec
@@ -104,38 +139,24 @@ class ModuleInfo(QtGui.QWidget):
         font.setPixelSize(24)
         self.name.setFont(font)
 
-        mono = QtGui.QFont('Monospace')
-        mono.setStyleHint(QtGui.QFont.TypeWriter)
-        self.requires.setFont(mono)
-        self.environment.setFont(mono)
-
         # Set basic metadata
-        data = spec.repo.get_data(spec)
-        self.name.setText(data['name'])
-        self.version.setText(data['version'])
-        self.description.setText(data['description'])
-        self.author.setText(data['author'])
-        self.email.setText(data['email'])
+        self._data = spec.repo.get_data(spec)
+        self.name.setText(self._data['name'])
+        self.version.setText(self._data['version'])
+        self.description.setText(self._data['description'])
+        self.author.setText(self._data['author'])
+        self.email.setText(self._data['email'])
 
-        # TODO: include size in ShotgunRepo.get_data so we only do 1 query.
         self.size.setText(self.format_size(self.get_size(spec)))
 
         # Format requires
-        requires = '\n'.join(data['requires'] or [])
-        self.requires.setText(requires)
+        self.requires.clear()
+        for require in self._data['requires']:
+            self.requires.addItem(str(require))
+        self.requires.refresh_size()
 
         # Format environment
-        if data['environment']:
-            environment = app.cpenv.vendor.yaml.safe_dump(
-                data['environment'],
-                default_flow_style=False,
-                sort_keys=False,
-                indent=4,
-                width=79,
-            )
-        else:
-            environment = ''
-        self.environment.setText(environment)
+        self.environment.set_data(self._data['environment'])
 
         # Set icon
         try:
@@ -143,48 +164,44 @@ class ModuleInfo(QtGui.QWidget):
         except Exception:
             app.exception('X')
 
+    def copy_to_clipboard(self, *keys):
+        '''Copy module data keys to clipboard as nicely formatted yaml.'''
+
+        data = {key: self._data[key] for key in keys}
+        string = app.cpenv.vendor.yaml.safe_dump(
+            data,
+            default_flow_style=False,
+            sort_keys=False,
+            indent=4,
+            width=79,
+        )
+        qapp = QtGui.QApplication.instance()
+        qapp.clipboard().setText(string)
+
+        if keys == ('environment',):
+            message = 'Copied Environment to clipboard.'
+        elif keys == ('requires',):
+            message = 'Copied Requires to clipboard.'
+        else:
+            message = 'Copied to clipboard.'
+
+        note = Notice(
+            message,
+            fg_color="#EEE",
+            bg_color="#1694c9",
+            parent=self.parent()
+        )
+        note.show_top(self.parent())
+
     def get_thumbnail(self, spec):
         '''Download thumbnail and return QPixmap for spec.'''
 
-        # We need to construct a url since the shotgun api only
-        # returns a url for a low res thumbnail.
-        base_url = spec.repo.base_url
-        thumbnail = '/thumbnail/full/' + '/'.join(spec.path.split('/')[-2:])
-        thumbnail_url = base_url + thumbnail
-
-        # Ensure icons cache dir exists
-        icons_root = app.cpenv.get_cache_path('icons')
-        if not os.path.isdir(icons_root):
-            os.makedirs(icons_root)
-
-        # Download and cache thumbnail locally
-        icon_path = app.cpenv.get_cache_path(
-            'icons',
-            spec.qual_name + '_icon.png',
-        )
-        if not os.path.isfile(icon_path):
-            try:
-                data = spec.repo.shotgun.download_attachment(
-                    {'url': thumbnail_url}
-                )
-                with open(icon_path, 'wb') as f:
-                    f.write(data)
-            except Exception:
-                return self._default_icon
-
-        return QtGui.QPixmap(icon_path)
+        return QtGui.QPixmap(spec.repo.get_thumbnail(spec))
 
     def get_size(self, spec):
         '''Query Shotgun for archive size.'''
 
-        return int(app.shotgun.find_one(
-            spec.repo.module_entity,
-            filters=[
-                ['code', 'is', spec.name],
-                ['sg_version', 'is', spec.version.string]
-            ],
-            fields=['sg_archive_size'],
-        )['sg_archive_size'] or 0)
+        return spec.repo.get_size(spec)
 
     def format_size(self, number_of_bytes):
         '''Human readable size.'''
