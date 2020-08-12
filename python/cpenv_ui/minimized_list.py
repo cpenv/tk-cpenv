@@ -25,5 +25,4 @@ class MinimizedList(QtGui.QListWidget):
         max_height = 200
         items_height = self.sizeHintForRow(0) * (self.count() + 0.5)
         height = min(max_height, max(min_height, items_height))
-        app.info('refresh_size: %s' % height)
         self.setMaximumHeight(height)

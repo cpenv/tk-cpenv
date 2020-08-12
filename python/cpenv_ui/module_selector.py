@@ -325,12 +325,10 @@ class ModuleSelector(QtGui.QWidget):
     def on_selection_changed(self, widget):
         # Deselect items in the opposite list
         if widget == self.selected_list:
-            app.info('Selected List changed.')
             self.available_list.blockSignals(True)
             self.available_list.clear_selection()
             self.available_list.blockSignals(False)
         else:
-            app.info('Available List changed.')
             self.selected_list.blockSignals(True)
             self.selected_list.clear_selection()
             self.selected_list.blockSignals(False)
