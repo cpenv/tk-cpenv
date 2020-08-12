@@ -4,6 +4,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [v0.3.5](https://github.com/cpenv/tk-cpenv/releases/tag/v0.3.5) ([compare](https://github.com/cpenv/tk-cpenv/compare/v0.3.4...v0.3.5)) - 2020-08-12
+
+### Added
+- Add: popup notification when saving changes. ([a26af1b](https://github.com/cpenv/tk-cpenv/commit/a26af1b6fb5890923a95d61f0f56892e89230f8a) by Dan Bradham).
+- Add: copy icon add: docstring to res.__init__ ([96beb47](https://github.com/cpenv/tk-cpenv/commit/96beb47c2936a13cd573245578d54d7d6ff160da) by Dan Bradham).
+- Add: minimizedlist widget ([4f2fcc5](https://github.com/cpenv/tk-cpenv/commit/4f2fcc549c54ddd395d65d2f75705df40ac582ba) by Dan Bradham).
+- Add: copy to clipboard button to envdisplay ([8c19d4c](https://github.com/cpenv/tk-cpenv/commit/8c19d4cd3c39a3b1e715775500271d7b26813a43) by Dan Bradham).
+- Add: notice dialog ([13173e1](https://github.com/cpenv/tk-cpenv/commit/13173e1184fe20f44b81ee054a45cb2318868dd7) by Dan Bradham).
+- Add: support for nested dictionaries to envtree ([2c32fa0](https://github.com/cpenv/tk-cpenv/commit/2c32fa09adfd6fa71581b82fae29787401a1f932) by Dan Bradham).
+
+### Changed
+- Change: update set_modules_dialog.png ([cf5fbc4](https://github.com/cpenv/tk-cpenv/commit/cf5fbc4ccaabdeb0b78033206d587e3332052658) by Dan Bradham).
+- Change: improve layout of moduleinfo add: ability to copy environment and requires from moduleinfo ([3c8c183](https://github.com/cpenv/tk-cpenv/commit/3c8c18377cb63f85ffd1019c58f9ff76e9c16e61) by Dan Bradham).
+- Change: update cpenv to 0.5.11 ([357cc75](https://github.com/cpenv/tk-cpenv/commit/357cc758e64183ab83717366ab44887311bfb0a4) by Dan Bradham).
+
+### Misc
+- Chore: update changelog ([b2bf802](https://github.com/cpenv/tk-cpenv/commit/b2bf8025c450c7e37e9d326556b6cbc22b9bfc30) by Dan Bradham).
+
+
 ## [v0.3.4](https://github.com/cpenv/tk-cpenv/releases/tag/v0.3.4) ([compare](https://github.com/cpenv/tk-cpenv/compare/v0.3.3...v0.3.4)) - 2020-08-07
 
 ### Changed
