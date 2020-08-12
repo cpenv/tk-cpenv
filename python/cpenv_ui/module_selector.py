@@ -18,6 +18,7 @@ from .env_importer import EnvImporter
 from .env_display import EnvDisplay
 from .module_list import ModuleList
 from .module_info import ModuleInfo
+from .notice import Notice
 from . import res
 
 app = sgtk.platform.current_bundle()
@@ -64,6 +65,7 @@ class ModuleSelector(QtGui.QWidget):
             'engines': [],  # Name of available engines
             'available': {},  # Full list of available modules
             'selected': OrderedDict(),  # List of modules to activate on launch
+            'unsaved_changes': False,
         }
 
         # Create widgets
@@ -181,6 +183,7 @@ class ModuleSelector(QtGui.QWidget):
 
         # Update initial state from app context
         self.set_state_from_context(app.context)
+        self.resize(QtCore.QSize(900, 640))
 
     def clear_state(self):
         self.state['available'].clear()
@@ -188,6 +191,7 @@ class ModuleSelector(QtGui.QWidget):
         self.state['environment'] = None
         self.state['environments'][:] = []
         self.state['selected'].clear()
+        self.state['unsaved_changes'] = False
 
     def set_state_from_context(self, context):
         self.clear_state()
@@ -296,12 +300,19 @@ class ModuleSelector(QtGui.QWidget):
         self.state['unsaved_changes'] = True
         self.save_button.setEnabled(True)
 
-    def set_saved(self, message='Changes saved.'):
-        self.message_label.setText(message)
-        self.message_label.show()
+    def set_saved(self, message='Changes saved.', notify=False):
+        self.message_label.hide()
         self.save_button.setEnabled(False)
         self.state['unsaved_changes'] = False
-        QtCore.QTimer.singleShot(2000, self.message_label.hide)
+
+        if notify:
+            note = Notice(
+                'Changes saved.',
+                fg_color="#EEE",
+                bg_color="#1694c9",
+                parent=self
+            )
+            note.show_top(self)
 
     def on_selected_order_changed(self):
         # Reflect user reordering in state
@@ -382,8 +393,12 @@ class ModuleSelector(QtGui.QWidget):
             )
             dialog.show()
         except Exception:
-            app.info('HELLO')
-            app.exception('Error')
+            error_message = ErrorDialog(
+                label='Failed to preview environment.',
+                message=traceback.format_exc(),
+                parent=self,
+            )
+            error_message.exec_()
 
     def on_env_remove_clicked(self):
 
@@ -534,7 +549,13 @@ class ModuleSelector(QtGui.QWidget):
             )
             # Update env in state
             env.update(upd_env)
-            self.set_saved()
+            self.set_saved(notify=True)
         except Exception:
-            app.execption('Failed to save project modules...')
-            self.set_saved('Failed to save project modules...')
+            message = 'Failed to save Environment changes.'
+            error_message = ErrorDialog(
+                label=message,
+                message=traceback.format_exc(),
+                parent=self,
+            )
+            error_message.exec_()
+            app.execption(message)
