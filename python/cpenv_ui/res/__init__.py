@@ -1,3 +1,8 @@
+'''
+Tool icons are from the Material Design icon library.
+icon_*.png and module_*.png are from cpenv.
+'''
+
 from os.path import abspath, dirname, join
 
 
