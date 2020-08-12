@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 '''isort:skip_file'''
 __title__ = 'cpenv'
-__version__ = '0.5.8'
+__version__ = '0.5.11'
 __author__ = 'Dan Bradham'
 __email__ = 'danielbradham@gmail.com'
 __url__ = 'http://github.com/cpenv/cpenv'
@@ -11,6 +11,7 @@ __description__ = 'Cross-platform Python environment management.'
 
 # Local imports
 from .api import *
+from .module import *
 from .repos import *
 from .reporter import *
 from .resolver import *
@@ -18,7 +19,6 @@ from .versions import *
 from . import vendor
 from . import paths
 from . import compat
-from . import hooks
 from . import mappings
 
 
