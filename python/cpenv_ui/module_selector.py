@@ -373,9 +373,6 @@ class ModuleSelector(QtGui.QWidget):
             module_env = Template(module_env).safe_substitute(config_vars)
             # 4. Load as dict
             module_env = yaml.safe_load(module_env)
-            # 5. Preprocess - extracts platform keys
-            module_env = mappings.preprocess_dict(module_env)
-
             module_envs.append(module_env)
 
         # Combine all module environments
