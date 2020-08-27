@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [v0.3.6](https://github.com/cpenv/tk-cpenv/releases/tag/v0.3.6) ([compare](https://github.com/cpenv/tk-cpenv/compare/v0.3.5...v0.3.6)) - 2020-08-27
+
+### Changed
+- Change: pass instantiated reporter to cpenv.set_reporter ([469fb90](https://github.com/cpenv/tk-cpenv/commit/469fb90a404a2e796736b8c9f42222e0a0432673) by Dan Bradham).
+- Change: update cpenv to 0.5.12 ([f204353](https://github.com/cpenv/tk-cpenv/commit/f2043534a963daffd5abfd49e62c8ec5b91da2a3) by Dan Bradham).
+
+### Misc
+- Chore: update version tag in readme ([2d85b6b](https://github.com/cpenv/tk-cpenv/commit/2d85b6bae2a8e6d401b7aeb0c5b4da7e92b0eae3) by Dan Bradham).
+
+
 ## [v0.3.5](https://github.com/cpenv/tk-cpenv/releases/tag/v0.3.5) ([compare](https://github.com/cpenv/tk-cpenv/compare/v0.3.4...v0.3.5)) - 2020-08-12
 
 ### Added
@@ -19,8 +29,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Change: improve layout of moduleinfo add: ability to copy environment and requires from moduleinfo ([3c8c183](https://github.com/cpenv/tk-cpenv/commit/3c8c18377cb63f85ffd1019c58f9ff76e9c16e61) by Dan Bradham).
 - Change: update cpenv to 0.5.11 ([357cc75](https://github.com/cpenv/tk-cpenv/commit/357cc758e64183ab83717366ab44887311bfb0a4) by Dan Bradham).
 
+### Removed
+- Remove: extraneous logging ([4831b5c](https://github.com/cpenv/tk-cpenv/commit/4831b5c09c87173ad6d078e714e7c52dc1c1abb7) by Dan Bradham).
+
 ### Misc
-- Chore: update changelog ([b2bf802](https://github.com/cpenv/tk-cpenv/commit/b2bf8025c450c7e37e9d326556b6cbc22b9bfc30) by Dan Bradham).
+- Chore: update changelog ([4241422](https://github.com/cpenv/tk-cpenv/commit/424142262cfe91259e32699165b295d12f31cf1f) by Dan Bradham).
 
 
 ## [v0.3.4](https://github.com/cpenv/tk-cpenv/releases/tag/v0.3.4) ([compare](https://github.com/cpenv/tk-cpenv/compare/v0.3.3...v0.3.4)) - 2020-08-07
