@@ -7,12 +7,10 @@ from .dialogs import ProgressDialog
 class UIReporter(object):
     '''A reporter for cpenv that displays reports in a ProgresDialog.'''
 
-    # Injected during CpenvApplication.__init__
-    app = None
-    engine = None
-
-    def __init__(self):
+    def __init__(self, app, engine):
         self._dialog = None
+        self.app = app
+        self.engine = engine
 
     @property
     def dialog(self):

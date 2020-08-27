@@ -61,10 +61,8 @@ class CpenvApplication(sgtk.platform.Application):
         # Setup UIReporter
         class _UIReporter(self.ui.UIReporter, self.cpenv.Reporter):
             '''Mix UIReporter with Reporter base class and inject deps.'''
-            app = self
-            engine = self.engine
 
-        self.cpenv.set_reporter(_UIReporter)
+        self.cpenv.set_reporter(_UIReporter(self, self.engine))
 
         # Setup ShotgunRepo
         self.io = CpenvIO(self)
