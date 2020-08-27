@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 # Standard library imports
 import io
-import fnmatch
 import os
 import zipfile
 from functools import partial
@@ -227,7 +226,7 @@ class ShotgunRepo(Repo):
         with progress_bar as progress_bar:
             # 1. Create archive
             archive = api.get_cache_path('tmp', module.qual_name + '.zip')
-            zip_folder(module.path, archive)
+            paths.zip_folder(module.path, archive)
             archive_size = os.path.getsize(archive)
             progress_bar.update(1)
 
@@ -243,7 +242,7 @@ class ShotgunRepo(Repo):
             progress_bar.update(1)
 
             # 3. Upload icon as thumbnail
-            if module.has_icon():
+            if module.has_icon:
                 self.shotgun.upload_thumbnail(
                     self.module_entity,
                     entity['id'],
@@ -389,22 +388,3 @@ def module_to_entity(module, **fields):
     data = module.raw_config.strip('\n')
     fields.setdefault('sg_data', data)
     return fields
-
-
-def zip_folder(folder, where):
-    '''Zip the contents of a folder.'''
-
-    parent = os.path.dirname(where)
-    if not os.path.isdir(parent):
-        os.makedirs(parent)
-
-    # TODO: Count files first so we can report progress of building zip
-
-    with zipfile.ZipFile(where, 'w', zipfile.ZIP_DEFLATED) as zip_file:
-        for root, subdirs, files in paths.exclusive_walk(folder):
-            rel_root = os.path.relpath(root, folder)
-            for file in files:
-                zip_file.write(
-                    os.path.join(root, file),
-                    arcname=os.path.join(rel_root, file)
-                )

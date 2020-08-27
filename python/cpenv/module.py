@@ -65,7 +65,7 @@ class Module(object):
         }
         self._raw_config = None
         self._config = None
-        self._environ = None
+        self._env = None
 
         # Determine name, version, qual_name, and real_name
 
@@ -169,25 +169,6 @@ class Module(object):
         self.run_hook('post_remove')
 
     @property
-    def icon(self):
-        return self.relative_path('icon.png')
-
-    def has_icon(self):
-        return os.path.isfile(self.icon)
-
-    @property
-    def description(self):
-        return self.config.get('description', '')
-
-    @property
-    def author(self):
-        return self.config.get('author', '')
-
-    @property
-    def email(self):
-        return self.config.get('email', '')
-
-    @property
     def is_active(self):
         from . import api
         return self.real_name in api.get_active_modules()
@@ -224,16 +205,36 @@ class Module(object):
         return self._config
 
     @property
-    def environment(self):
-        if self._environ is None:
-            env = self.config.get('environment', {})
-            additional = {
-                'CPENV_ACTIVE_MODULES': [self.real_name],
-            }
-            env = mappings.join_dicts(additional, env)
-            self._environ = mappings.preprocess_dict(env)
+    def author(self):
+        return self.config.get('author', '')
 
-        return self._environ
+    @property
+    def description(self):
+        return self.config.get('description', '')
+
+    @property
+    def email(self):
+        return self.config.get('email', '')
+
+    @property
+    def environment(self):
+        if self._env is None:
+            self._env = self.config.get('environment', {})
+            self._env['CPENV_ACTIVE_MODULES'] = {'append': self.real_name}
+
+        return self._env
+
+    @property
+    def requires(self):
+        return self.config.get('email', [])
+
+    @property
+    def icon(self):
+        return self.relative_path('icon.png')
+
+    @property
+    def has_icon(self):
+        return os.path.isfile(self.icon)
 
 
 def read_raw_config(module_file):
@@ -328,11 +329,12 @@ def is_exact_match(requirement, module_spec):
 
     name, version = parse_module_requirement(requirement)
     return (
-        module_spec.qual_name == requirement or
-        module_spec.real_name == requirement or
-        (
-            version and module_spec.name == name and
-            module_spec.version == version
+        module_spec.qual_name == requirement
+        or module_spec.real_name == requirement
+        or (
+            version
+            and module_spec.name == name
+            and module_spec.version == version
         )
     )
 

@@ -3,10 +3,12 @@
 Tools for working with paths and files.
 '''
 
+# Standard library imports
 from fnmatch import fnmatch
 import os
 import shutil
 import stat
+import zipfile
 
 
 def normalize(*parts):
@@ -41,7 +43,8 @@ def rmtree(path):
 
 
 def walk_up(start_dir, depth=20):
-    '''Walk up a directory tree'''
+    '''Like os.walk but walks up a tree.'''
+
     root = start_dir
 
     for i in range(depth):
@@ -128,3 +131,22 @@ def exclusive_walk(folder, exclude=None, exclude_patterns=None):
             included.append(file)
 
         yield root, subdirs, included
+
+
+def zip_folder(folder, where):
+    '''Zip the contents of a folder.'''
+
+    parent = os.path.dirname(where)
+    if not os.path.isdir(parent):
+        os.makedirs(parent)
+
+    # TODO: Count files first so we can report progress of building zip.
+
+    with zipfile.ZipFile(where, 'w', zipfile.ZIP_DEFLATED) as zip_file:
+        for root, subdirs, files in exclusive_walk(folder):
+            rel_root = os.path.relpath(root, folder)
+            for file in files:
+                zip_file.write(
+                    os.path.join(root, file),
+                    arcname=os.path.join(rel_root, file)
+                )
