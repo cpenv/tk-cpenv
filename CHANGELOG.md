@@ -4,13 +4,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [v0.3.7](https://github.com/cpenv/tk-cpenv/releases/tag/v0.3.7) ([compare](https://github.com/cpenv/tk-cpenv/compare/v0.3.6...v0.3.7)) - 2020-08-28
+
+### Changed
+- Change: update cpenv to 0.5.13 ([c357b0a](https://github.com/cpenv/tk-cpenv/commit/c357b0a077c832dedaf0cc54485000e6c944386c) by Dan Bradham).
+
+
 ## [v0.3.6](https://github.com/cpenv/tk-cpenv/releases/tag/v0.3.6) ([compare](https://github.com/cpenv/tk-cpenv/compare/v0.3.5...v0.3.6)) - 2020-08-27
 
 ### Changed
 - Change: pass instantiated reporter to cpenv.set_reporter ([469fb90](https://github.com/cpenv/tk-cpenv/commit/469fb90a404a2e796736b8c9f42222e0a0432673) by Dan Bradham).
 - Change: update cpenv to 0.5.12 ([f204353](https://github.com/cpenv/tk-cpenv/commit/f2043534a963daffd5abfd49e62c8ec5b91da2a3) by Dan Bradham).
 
+### Fixed
+- Fix: remove called to preprocess_dict when generating environ preview ([dc05363](https://github.com/cpenv/tk-cpenv/commit/dc053636cfcbeed664fceffb516caeba4780b078) by Dan Bradham).
+
 ### Misc
+- Chore: update changelog ([2c3f790](https://github.com/cpenv/tk-cpenv/commit/2c3f79068de637fabe577dea8c1de84276fbfdac) by Dan Bradham).
 - Chore: update version tag in readme ([2d85b6b](https://github.com/cpenv/tk-cpenv/commit/2d85b6bae2a8e6d401b7aeb0c5b4da7e92b0eae3) by Dan Bradham).
 
 

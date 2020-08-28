@@ -1,5 +1,5 @@
 # tk-cpenv
-[![stable](https://img.shields.io/badge/version-0.3.6-green.svg)](https://semver.org)
+[![stable](https://img.shields.io/badge/version-0.3.7-green.svg)](https://semver.org)
 
 Integrates [cpenv](https://github.com/cpenv/cpenv) with Shotgun Toolkit.
 
