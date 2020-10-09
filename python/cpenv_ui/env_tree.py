@@ -95,33 +95,3 @@ class EnvTree(QtGui.QTreeWidget):
 
         if parent_item:
             parent_item.setExpanded(True)
-
-    def _set(self, key, value):
-        self._data[key] = value
-        if os.pathsep in value:
-            parent = QtGui.QTreeWidgetItem(parent=self)
-            parent.setText(Key, key)
-            self.addTopLevelItem(parent)
-
-            for value in value.split(os.pathsep):
-                child = QtGui.QTreeWidgetItem()
-                child.setText(Value, value)
-                parent.addChild(child)
-
-            parent.setExpanded(True)
-        elif isinstance(value, (list, tuple)):
-            parent = QtGui.QTreeWidgetItem(parent=self)
-            parent.setText(Key, key)
-            self.addTopLevelItem(parent)
-
-            for v in value:
-                child = QtGui.QTreeWidgetItem()
-                child.setText(Value, v)
-                parent.addChild(child)
-
-            parent.setExpanded(True)
-        else:
-            item = QtGui.QTreeWidgetItem(parent=self)
-            item.setText(Key, key)
-            item.setText(Value, value)
-            self.addTopLevelItem(item)

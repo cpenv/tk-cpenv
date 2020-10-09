@@ -5,7 +5,6 @@ from __future__ import print_function
 from functools import partial
 
 # Shotgun imports
-import sgtk
 from sgtk.platform.qt import QtCore, QtGui
 
 # PySide1 compat
