@@ -4,10 +4,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [v0.3.8](https://github.com/cpenv/tk-cpenv/releases/tag/v0.3.8) ([compare](https://github.com/cpenv/tk-cpenv/compare/v0.3.7...v0.3.8)) - 2020-10-09
+
+### Changed
+- Change: manually set environment in cpenvapp.activate ([fe9998e](https://github.com/cpenv/tk-cpenv/commit/fe9998e3cfe242d3621f435e3933a89ae1d91311) by Dan Bradham).
+- Change: update cpenv to 0.5.14 ([51413d5](https://github.com/cpenv/tk-cpenv/commit/51413d5ba8fb3adb86356ab11efc35f535a2dadf) by Dan Bradham).
+
+### Misc
+- Chore: remove unused stuff ([8299d04](https://github.com/cpenv/tk-cpenv/commit/8299d043092f5482930256f296c3196c6ddf36c3) by Dan Bradham).
+
+
 ## [v0.3.7](https://github.com/cpenv/tk-cpenv/releases/tag/v0.3.7) ([compare](https://github.com/cpenv/tk-cpenv/compare/v0.3.6...v0.3.7)) - 2020-08-28
 
 ### Changed
 - Change: update cpenv to 0.5.13 ([c357b0a](https://github.com/cpenv/tk-cpenv/commit/c357b0a077c832dedaf0cc54485000e6c944386c) by Dan Bradham).
+
+### Misc
+- Chore: update changelog and readme ([448b279](https://github.com/cpenv/tk-cpenv/commit/448b2791a9a3221b460c8c91d9c74871335aa45d) by Dan Bradham).
 
 
 ## [v0.3.6](https://github.com/cpenv/tk-cpenv/releases/tag/v0.3.6) ([compare](https://github.com/cpenv/tk-cpenv/compare/v0.3.5...v0.3.6)) - 2020-08-27
