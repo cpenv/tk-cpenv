@@ -16,6 +16,7 @@ from sgtk.platform.qt import QtCore, QtGui
 from .dialogs import ErrorDialog
 from .env_importer import EnvImporter
 from .env_display import EnvDisplay
+from .env_permissions import EnvPermissions
 from .module_list import ModuleList
 from .module_info import ModuleInfo
 from .notice import Notice
@@ -99,12 +100,17 @@ class ModuleSelector(QtGui.QWidget):
             icon=QtGui.QIcon(res.get_path('preview.png'))
         )
         self.env_preview.setToolTip('Preview combined environment variables.')
+        self.env_lock = QtGui.QToolButton(
+            icon=QtGui.QIcon(res.get_path('lock_open.png'))
+        )
+        self.env_lock.setToolTip('Restrict to users.')
         self.env_header = QtGui.QHBoxLayout()
         self.env_header.addWidget(self.env_label)
         self.env_header.addWidget(self.env_import)
         self.env_header.addWidget(self.env_add)
         self.env_header.addWidget(self.env_remove)
         self.env_header.addWidget(self.env_preview)
+        self.env_header.addWidget(self.env_lock)
 
         self.engine_label = QtGui.QLabel('Engine')
         self.engine_label.setToolTip(
@@ -156,7 +162,7 @@ class ModuleSelector(QtGui.QWidget):
         self.layout.addWidget(self.engine_list, 3, 0)
         self.layout.addWidget(self.selected_label, 4, 0)
         self.layout.addWidget(self.selected_list, 5, 0)
-        self.layout.addWidget(self.module_info, 0, 2, 6, 1)
+        self.layout.addWidget(self.module_info, 1, 2, 5, 1)
         self.layout.addLayout(self.footer, 6, 0)
         self.setLayout(self.layout)
 
@@ -179,6 +185,7 @@ class ModuleSelector(QtGui.QWidget):
         self.env_add.clicked.connect(self.on_env_add_clicked)
         self.env_remove.clicked.connect(self.on_env_remove_clicked)
         self.env_preview.clicked.connect(self.on_env_preview_clicked)
+        self.env_lock.clicked.connect(self.on_env_lock_clicked)
         self.env_list.activated.connect(self.on_env_changed)
 
         # Update initial state from app context
@@ -221,6 +228,7 @@ class ModuleSelector(QtGui.QWidget):
         if self.state['environment']:
             # Update selected state
             self.state['selected'].clear()
+
             if not self.state['environment']['sg_requires']:
                 return
 
@@ -241,9 +249,18 @@ class ModuleSelector(QtGui.QWidget):
         self.module_info.clear_module_spec()
         self._update_available_list()
         self._update_env_list()
+        self._update_env_lock()
         self._update_engine_list()
         self._update_selected_list()
         self.set_saved(message='')
+
+    def _update_env_lock(self):
+        is_locked = bool(self.state['environment'].get('sg_permissions_users'))
+        icon = [
+            QtGui.QIcon(res.get_path('lock_open.png')),
+            QtGui.QIcon(res.get_path('lock.png')),
+        ][is_locked]
+        self.env_lock.setIcon(icon)
 
     def _update_available_list(self):
         self.available_list.clear()
@@ -342,13 +359,29 @@ class ModuleSelector(QtGui.QWidget):
         else:
             self.module_info.clear_module_spec()
 
+    def on_env_lock_clicked(self):
+        '''Bring up the environment permissions dialog.'''
+
+        try:
+            dialog = EnvPermissions(self.state['environment'], self)
+            save = dialog.exec_()
+            if save:
+                self._update_env_lock()
+        except Exception:
+            error_message = ErrorDialog(
+                label='Failed to open Permissions Dialog.',
+                message=traceback.format_exc(),
+                parent=self,
+            )
+            error_message.exec_()
+
     def on_env_preview_clicked(self):
         '''In order to preview an environment we need to take the same steps
         cpenv takes when combining module environments during activation, but,
         we must do so without having the module localized.
 
-        TODO: Because of how complex it is to build the environment preview, I
-              feel that this aspect of cpenv may need to be refactored.
+        TODO: Because of how complex it is to build the environment preview,
+              this aspect of cpenv may need to be refactored.
         '''
         env = self.state['environment']
         home_path = app.cpenv.get_home_modules_path()
