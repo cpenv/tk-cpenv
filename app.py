@@ -275,12 +275,19 @@ class CpenvIO(object):
             return []
         return list(sorted(entities, key=lambda e: e['name']))
 
-    def get_environment(self, name=None, engine=None, project=None):
+    def get_environment(
+        self,
+        project=None,
+        engine=None,
+        name=None,
+        user=None,
+        requires=None,
+    ):
         '''Get an Environment for the specified engine and project.
 
         Arguments:
-            engine (str): toolkit engine name like tk-maya
             project (dict): Project data (default: context.project)
+            engine (str): toolkit engine name like tk-maya
             name (str): Name of the environment to lookup
 
         Returns:
@@ -290,38 +297,102 @@ class CpenvIO(object):
         if (name, engine) == (None, None):
             raise ValueError('Missing required argument: name or engine')
 
-        # Build filters
         filters = [['project', 'is', project or self.app.context.project]]
-        if name:
-            filters.append(['code', 'is', name])
+        if user:
+            filters.append({
+                'filter_operator': 'any',
+                'filters': [
+                    ['sg_permissions_users', 'is', user],
+                    ['sg_permissions_users', 'is', None],
+                ]
+            })
         if engine:
             filters.append(['sg_engine', 'is', engine])
+        if name:
+            filters.append(['code', 'is', name])
+        if requires:
+            filters.append(['sg_requires', 'contains', requires])
 
         return self.shotgun.find_one(
             self.environment_entity,
             filters=filters,
-            fields=['code', 'sg_engine', 'id', 'sg_requires', 'project'],
+            fields=[
+                'code',
+                'id',
+                'project',
+                'sg_engine',
+                'sg_permissions_users',
+                'sg_requires',
+            ],
         )
 
-    def get_environments(self, project=None):
+    def get_environments(
+        self,
+        project=None,
+        engine=None,
+        name=None,
+        user=None,
+        requires=None,
+    ):
         '''Get a list Environment entities for a project.
 
         Arguments:
             project (dict): Project data (default: context.project)
+            engine (str): toolkit engine name like tk-maya
+            name (str): Name of the environment to lookup
+            user (dict): User data
+            requires (str): A module requirement to lookup
 
         Returns:
             list[dict]: Environment entities sorted by code(name).
         '''
 
+        filters = [['project', 'is', project or self.app.context.project]]
+        if user:
+            filters.append({
+                'filter_operator': 'any',
+                'filters': [
+                    ['sg_permissions_users', 'is', user],
+                    ['sg_permissions_users', 'is', None],
+                ]
+            })
+        if engine:
+            filters.append(['sg_engine', 'is', engine])
+        if name:
+            filters.append(['code', 'is', name])
+        if requires:
+            filters.append(['sg_requires', 'contains', requires])
+
         entities = self.shotgun.find(
             self.environment_entity,
-            filters=[['project', 'is', project or self.app.context.project]],
-            fields=['code', 'sg_engine', 'id', 'sg_requires', 'project'],
+            filters=filters,
+            fields=[
+                'code',
+                'id',
+                'project',
+                'sg_engine',
+                'sg_permissions_users',
+                'sg_requires',
+            ],
         )
         if not entities:
             return []
 
         return list(sorted(entities, key=lambda e: e['code']))
+
+    def set_environment_permissions(self, id, users):
+        '''Set the permissions for an environment with the specified id.
+
+        Arguments:
+            id (int): Id of Environment to update.
+            users (list): List of User Entities to add to sg_permissions_users.
+        '''
+
+        self.shotgun.update(
+            entity_type=self.environment_entity,
+            entity_id=id,
+            data={'sg_permissions_users': users}
+        )
 
     def update_environment(self, code, engine, requires, project, id=None):
         '''Create or update an environment.
