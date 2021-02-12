@@ -49,6 +49,7 @@ class EnvDisplay(QtGui.QDialog):
         self.layout.addLayout(self.button_layout)
         self.setLayout(self.layout)
         self.setWindowTitle(title)
+        self.setWindowIcon(QtGui.QIcon(res.get_path('icon_dark_256.png')))
 
     def copy_to_clipboard(self):
         string = app.cpenv.vendor.yaml.safe_dump(

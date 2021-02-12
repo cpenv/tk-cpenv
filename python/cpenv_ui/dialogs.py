@@ -15,7 +15,7 @@ class ProgressDialog(QtGui.QDialog):
 
         # Window options
         self.setWindowTitle('tk-cpenv')
-        self.setWindowIcon(QtGui.QIcon(res.get_path('module_256.png')))
+        self.setWindowIcon(QtGui.QIcon(res.get_path('module_dark_256.png')))
         self.setWindowFlags(
             self.windowFlags()
             | QtCore.Qt.WindowStaysOnTopHint
