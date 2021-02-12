@@ -45,7 +45,6 @@ class Notice(QtGui.QWidget):
         )
         self.setMinimumSize(1, 1)
         self.setMaximumHeight(30)
-        self.setMaximumWidth(self.parent().width())
 
     def show_top(self, widget, duration=2000):
         '''Show the notice at the top center of the specified widget'''
@@ -55,6 +54,9 @@ class Notice(QtGui.QWidget):
         ref_pos = widget.mapToGlobal(ref_pos)
 
         rect = self.rect()
+        rect.setWidth(ref_rect.width())
+        self.setGeometry(rect)
+
         pos = QtCore.QPoint(int(rect.width() * 0.5), rect.top())
 
         delta = ref_pos - pos
