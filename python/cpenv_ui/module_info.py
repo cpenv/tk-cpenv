@@ -162,7 +162,8 @@ class ModuleInfo(QtGui.QWidget):
         try:
             self.icon.setPixmap(self.get_thumbnail(spec))
         except Exception:
-            app.exception('X')
+            self.icon.setPixmap(self._default_icon)
+            app.exception('Error loading icon from %s', spec)
 
     def copy_to_clipboard(self, *keys):
         '''Copy module data keys to clipboard as nicely formatted yaml.'''
@@ -196,7 +197,11 @@ class ModuleInfo(QtGui.QWidget):
     def get_thumbnail(self, spec):
         '''Download thumbnail and return QPixmap for spec.'''
 
-        return QtGui.QPixmap(spec.repo.get_thumbnail(spec))
+        icon = spec.repo.get_thumbnail(spec)
+        if icon:
+            return QtGui.QPixmap(spec.repo.get_thumbnail(spec))
+        else:
+            return self._default_icon
 
     def get_size(self, spec):
         '''Query Shotgun for archive size.'''
