@@ -4,7 +4,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
-## [v0.3.9](https://github.com/cpenv/tk-cpenv/releases/tag/v0.3.9) - 2021-02-09
+## [0.4.0](https://github.com/cpenv/tk-cpenv/releases/tag/0.4.0) - 2021-02-12
+
+<small>[Compare with v0.3.9](https://github.com/cpenv/tk-cpenv/compare/v0.3.9...0.4.0)</small>
+
+### Added
+- Add and display envselector dialog when launching engine with multiple environments available. ([4b87b17](https://github.com/cpenv/tk-cpenv/commit/4b87b17f8ad593eadc8dbfe31ebc1aa0d1e7f861) by Dan Bradham).
+- Add envpermissions dialog. ([0afe001](https://github.com/cpenv/tk-cpenv/commit/0afe001ebc9a9a5e7660a05fe62a032ff0a13173) by Dan Bradham).
+- Add permissions tool to moduleselector. ([fef9523](https://github.com/cpenv/tk-cpenv/commit/fef95236960f29de7130b6e582ce603bad1dfc7a) by Dan Bradham).
+- Add support for environment permissions. ([771f40d](https://github.com/cpenv/tk-cpenv/commit/771f40dd92661f04dd6f07477cb2b4cec2d7e215) by Dan Bradham).
+
+### Fixed
+- Fix notice width. ensure it's the full width of it's parent widget. ([252f43f](https://github.com/cpenv/tk-cpenv/commit/252f43f95109b7a3f525d5cd398234bc388ae3da) by Dan Bradham).
+- Fix bug where the icon in moduleinfo would not properly update. ([4369494](https://github.com/cpenv/tk-cpenv/commit/436949403ab3fb84ed29ce6bffcd0245a808e62f) by Dan Bradham).
+- Fix bug in envtree when encountering an int value. ([614f558](https://github.com/cpenv/tk-cpenv/commit/614f55843f18bed9231d31bafe5669aa0583d9a0) by Dan Bradham).
+
+
+## [v0.3.9](https://github.com/cpenv/tk-cpenv/releases/tag/v0.3.9) - 2021-02-10
 
 <small>[Compare with v0.3.8](https://github.com/cpenv/tk-cpenv/compare/v0.3.8...v0.3.9)</small>
 
