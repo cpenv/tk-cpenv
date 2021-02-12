@@ -1,5 +1,5 @@
 # tk-cpenv
-[![stable](https://img.shields.io/badge/version-0.3.9-green.svg)](https://semver.org)
+[![stable](https://img.shields.io/badge/version-0.4.0-green.svg)](https://semver.org)
 
 Integrates [cpenv](https://github.com/cpenv/cpenv) with Shotgun Toolkit.
 
@@ -131,7 +131,7 @@ To quickly verify that your module has been uploaded, you can use the `cpenv lis
 # Using the Set Modules dialog
 1. Create an Environment and set an engine for it.
 
-<img src="https://github.com/cpenv/tk-cpenv/blob/master/images/1_add_new_environment.png" width="461"/>
+<img src="https://github.com/cpenv/tk-cpenv/blob/master/images/1_add_new_environment.png" width="548"/>
 
 2. Drag and drop modules to build your Environment. The order of the modules here is important. Modules later in the list can override environment variables set earlier in the list. You can drag and drop to reorder them or move them back to the Available Modules list to remove them from the environment.
 
@@ -139,7 +139,15 @@ To quickly verify that your module has been uploaded, you can use the `cpenv lis
 
 3. Use the Preview Environment tool to view the combined environment variables for your Environment.
 
-<img src="https://github.com/cpenv/tk-cpenv/blob/master/images/3_preview_env_tool.png" width="432"/>
+<img src="https://github.com/cpenv/tk-cpenv/blob/master/images/3_preview_env_tool.png" width="548"/>
 <img src="https://github.com/cpenv/tk-cpenv/blob/master/images/preview_env_dialog.png"/>
 
-4. Save your changes! You're ready to launch some software.
+4. Use the Permissions dialog to restrict access to an Environment to certain users. This is great for development when you need to test an Environment before pushing it out to everyone.
+    <img src="https://github.com/cpenv/tk-cpenv/blob/master/images/4_permissions_tool.png" width="548"/>
+    <img src="https://github.com/cpenv/tk-cpenv/blob/master/images/permissions_dialog.png"/>
+    * Users will be prompted to select an Environment when they launch an application if they have permissions to multiple Environments for an engine.
+    <img src="https://github.com/cpenv/tk-cpenv/blob/master/images/env_selector.png"/>
+
+
+5. Save your changes! You're ready to launch some software.
+
