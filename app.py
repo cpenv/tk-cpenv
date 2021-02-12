@@ -87,6 +87,23 @@ class CpenvApplication(sgtk.platform.Application):
 
         self.ui.module_selector.show(self)
 
+    def show_environment_selector(self, environments):
+        '''Show the EnvSelector dialog.'''
+
+        try:
+            dialog, widget = self.engine._create_dialog_with_widget(
+                title='tk-cpenv',
+                bundle=self,
+                widget_class=self.ui.env_selector.EnvSelector,
+                environments=environments,
+            )
+            dialog.setMinimumWidth(300)
+            dialog.resize(1, 1)
+            dialog.exec_()
+            return widget.state['choice']
+        except:
+            self.exception('Error!')
+
     def info(self, message, *args):
         '''Log info prefixed with tk-cpenv:'''
 
@@ -224,12 +241,20 @@ class CpenvApplication(sgtk.platform.Application):
             engine = engine_name
 
         # Get Environment for engine
-        env = self.io.get_environment(engine=engine)
-        if not env:
+        environments = self.io.get_environments(
+            engine=engine,
+            user=self.context.user,
+        )
+        if not environments:
             self.debug('Found no Environment for %s.' % engine)
             return
 
-        self.debug('Found Environment "%s"' % env['code'])
+        self.debug('Found Environments: %s', environments)
+
+        if len(environments) == 2:
+            env = self.show_environment_selector(environments)
+        else:
+            env = environments[0]
 
         # Get Environment requirements
         requires_str = env['sg_requires']
