@@ -59,6 +59,10 @@ class EnvTree(QtGui.QTreeWidget):
             self.set(k, v)
 
     def set(self, key, value, parent_item=None):
+
+        if isinstance(value, int):
+            value = str(value)
+
         if os.pathsep in value:
             value = value.split(os.pathsep)
 
