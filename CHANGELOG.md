@@ -4,9 +4,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
-## [0.4.0](https://github.com/cpenv/tk-cpenv/releases/tag/0.4.0) - 2021-02-12
+## [v0.5.0](https://github.com/cpenv/tk-cpenv/releases/tag/v0.5.0) - 2021-06-04
 
-<small>[Compare with v0.3.9](https://github.com/cpenv/tk-cpenv/compare/v0.3.9...0.4.0)</small>
+<small>[Compare with v0.4.0](https://github.com/cpenv/tk-cpenv/compare/v0.4.0...v0.5.0)</small>
+
+### Added
+- Add support for restricting environments to specific software versions. closes #10. ([09b3e09](https://github.com/cpenv/tk-cpenv/commit/09b3e0937674ba9087963b32f81ac142ef1b2ea8) by Dan Bradham).
+
+
+## [v0.4.0](https://github.com/cpenv/tk-cpenv/releases/tag/v0.4.0) - 2021-02-12
+
+<small>[Compare with v0.3.9](https://github.com/cpenv/tk-cpenv/compare/v0.3.9...v0.4.0)</small>
 
 ### Added
 - Add and display envselector dialog when launching engine with multiple environments available. ([4b87b17](https://github.com/cpenv/tk-cpenv/commit/4b87b17f8ad593eadc8dbfe31ebc1aa0d1e7f861) by Dan Bradham).
