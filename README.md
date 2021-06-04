@@ -1,5 +1,5 @@
 # tk-cpenv
-[![stable](https://img.shields.io/badge/version-0.4.0-green.svg)](https://semver.org)
+[![stable](https://img.shields.io/badge/version-0.5.0-green.svg)](https://semver.org)
 
 Integrates [cpenv](https://github.com/cpenv/cpenv) with Shotgun Toolkit.
 
@@ -148,6 +148,7 @@ To quickly verify that your module has been uploaded, you can use the `cpenv lis
     * Users will be prompted to select an Environment when they launch an application if they have permissions to multiple Environments for an engine.
     <img src="https://github.com/cpenv/tk-cpenv/blob/master/images/env_selector.png"/>
 
+5. Optionally restrict the Environment to certain software versions by enter the versions into the "Software Versions" field. Leaving it blank will make the Environment apply to all versions of the selected Engine's software. For example if you entered "2020 2022" for a "tk-maya" Environment, that would be activated for either Maya 2020 or Maya 2022.
 
-5. Save your changes! You're ready to launch some software.
+6. Save your changes! You're ready to launch some software.
 
