@@ -77,8 +77,8 @@ class ModuleSelector(QtGui.QWidget):
         self.env_list.setFixedHeight(24)
         self.env_label = QtGui.QLabel('Environment')
         self.env_label.setToolTip(
-            'An environment consists of module requirements and applies to '
-            'a single toolkit engine. The required modules will be activated '
+            'An environment consists of module requirements and applies to\n'
+            'a single toolkit engine. The required modules will be activated\n'
             'when the toolkit engines application is launched.')
         self.env_label.setSizePolicy(
             QtGui.QSizePolicy.Expanding,
@@ -116,11 +116,20 @@ class ModuleSelector(QtGui.QWidget):
         self.engine_label.setToolTip(
             'The toolkit engine this environment applies to.'
         )
-        self.engine_list = QtGui.QComboBox()
         self.engine_label.setToolTip(
             'Select a toolkit engine this environment applies to.'
         )
+        self.engine_list = QtGui.QComboBox()
         self.engine_list.setFixedHeight(24)
+
+        self.sw_versions_label = QtGui.QLabel('Software Versions')
+        self.sw_versions_label.setToolTip(
+            'List of Versions this Environment applies to.\n'
+            'For example a value of "12.0v2 13.0v1" would restrict this\n'
+            'Environment to those versions of Nuke. Leave this blank to\n'
+            'have the Environment apply to all software versions.'
+        )
+        self.sw_versions_edit = QtGui.QLineEdit()
 
         self.available_label = QtGui.QLabel('Available Modules')
         self.available_label.setToolTip('List of available modules.')
@@ -152,18 +161,20 @@ class ModuleSelector(QtGui.QWidget):
         self.layout.setContentsMargins(20, 20, 20, 20)
         self.layout.setVerticalSpacing(4)
         self.layout.setHorizontalSpacing(12)
-        self.layout.setRowStretch(5, 1)
+        self.layout.setRowStretch(7, 1)
         self.layout.setColumnStretch(2, 1)
         self.layout.addWidget(self.available_label, 0, 1)
-        self.layout.addWidget(self.available_list, 1, 1, 5, 1)
+        self.layout.addWidget(self.available_list, 1, 1, 7, 1)
         self.layout.addLayout(self.env_header, 0, 0)
         self.layout.addWidget(self.env_list, 1, 0)
         self.layout.addWidget(self.engine_label, 2, 0)
         self.layout.addWidget(self.engine_list, 3, 0)
-        self.layout.addWidget(self.selected_label, 4, 0)
-        self.layout.addWidget(self.selected_list, 5, 0)
-        self.layout.addWidget(self.module_info, 1, 2, 5, 1)
-        self.layout.addLayout(self.footer, 6, 0)
+        self.layout.addWidget(self.sw_versions_label, 4, 0)
+        self.layout.addWidget(self.sw_versions_edit, 5, 0)
+        self.layout.addWidget(self.selected_label, 6, 0)
+        self.layout.addWidget(self.selected_list, 7, 0)
+        self.layout.addWidget(self.module_info, 1, 2, 7, 1)
+        self.layout.addLayout(self.footer, 8, 0)
         self.setLayout(self.layout)
 
         # Connect widgets
@@ -181,6 +192,7 @@ class ModuleSelector(QtGui.QWidget):
         self.selected_list.version_changed.connect(self.on_version_changed)
         self.save_button.clicked.connect(self.on_save_clicked)
         self.engine_list.activated.connect(self.on_engine_changed)
+        self.sw_versions_edit.textEdited.connect(self.on_sw_versions_changed)
         self.env_import.clicked.connect(self.on_env_import_clicked)
         self.env_add.clicked.connect(self.on_env_add_clicked)
         self.env_remove.clicked.connect(self.on_env_remove_clicked)
@@ -251,6 +263,7 @@ class ModuleSelector(QtGui.QWidget):
         self._update_env_list()
         self._update_env_lock()
         self._update_engine_list()
+        self._update_sw_versions()
         self._update_selected_list()
         self.set_saved(message='')
 
@@ -301,6 +314,15 @@ class ModuleSelector(QtGui.QWidget):
             else:
                 self.engine_list.addItem('Select an Engine')
                 self.engine_list.setCurrentIndex(self.engine_list.count() - 1)
+
+    def _update_sw_versions(self):
+        self.sw_versions_edit.setText('')
+        if not self.state['environment']:
+            self.sw_versions_edit.setEnabled(False)
+        else:
+            self.sw_versions_edit.setEnabled(True)
+            sw_versions = self.state['environment']['sg_software_versions']
+            self.sw_versions_edit.setText(sw_versions)
 
     def _update_selected_list(self):
         self.selected_list.clear()
@@ -487,6 +509,7 @@ class ModuleSelector(QtGui.QWidget):
             code=name,
             engine='',
             requires='',
+            software_versions='',
             project=app.context.project,
         )
         self.state['environments'].append(new_env)
@@ -528,6 +551,18 @@ class ModuleSelector(QtGui.QWidget):
             engine = self.engine_list.itemText(index)
             if engine != self.state['environment']['sg_engine']:
                 self.set_unsaved()
+            else:
+                self.set_saved(notify=False)
+
+    def on_sw_versions_changed(self, index):
+        if self.state['environment']:
+            env_sw_versions = self.state['environment']['sg_software_versions']
+            env_sw_versions = env_sw_versions or ''
+            sw_versions = self.sw_versions_edit.text()
+            if sw_versions != env_sw_versions:
+                self.set_unsaved()
+            else:
+                self.set_saved(notify=False)
 
     def on_version_changed(self, spec_set):
         if self.module_info._spec:
@@ -572,6 +607,7 @@ class ModuleSelector(QtGui.QWidget):
                 code=env['code'],
                 engine=self.engine_list.currentText(),
                 requires=' '.join(requires),
+                software_versions=self.sw_versions_edit.text(),
                 project=env.get('project', app.context.project),
                 id=env.get('id', None)
             )

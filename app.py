@@ -244,6 +244,7 @@ class CpenvApplication(sgtk.platform.Application):
         environments = self.io.get_environments(
             engine=engine,
             user=self.context.user,
+            software_versions=version,
         )
         if not environments:
             self.debug('Found no Environment for %s.' % engine)
@@ -307,6 +308,7 @@ class CpenvIO(object):
         name=None,
         user=None,
         requires=None,
+        software_versions=None,
     ):
         '''Get an Environment for the specified engine and project.
 
@@ -337,6 +339,10 @@ class CpenvIO(object):
             filters.append(['code', 'is', name])
         if requires:
             filters.append(['sg_requires', 'contains', requires])
+        if software_versions:
+            filters.append(
+                ['sg_software_versions', 'contains', software_versions]
+            )
 
         return self.shotgun.find_one(
             self.environment_entity,
@@ -348,6 +354,7 @@ class CpenvIO(object):
                 'sg_engine',
                 'sg_permissions_users',
                 'sg_requires',
+                'sg_software_versions',
             ],
         )
 
@@ -358,6 +365,7 @@ class CpenvIO(object):
         name=None,
         user=None,
         requires=None,
+        software_versions=None,
     ):
         '''Get a list Environment entities for a project.
 
@@ -387,6 +395,14 @@ class CpenvIO(object):
             filters.append(['code', 'is', name])
         if requires:
             filters.append(['sg_requires', 'contains', requires])
+        if software_versions:
+            filters.append({
+                'filter_operator': 'any',
+                'filters': [
+                    ['sg_software_versions', 'contains', software_versions],
+                    ['sg_software_versions', 'is', None],
+                ]
+            })
 
         entities = self.shotgun.find(
             self.environment_entity,
@@ -398,6 +414,7 @@ class CpenvIO(object):
                 'sg_engine',
                 'sg_permissions_users',
                 'sg_requires',
+                'sg_software_versions',
             ],
         )
         if not entities:
@@ -419,7 +436,15 @@ class CpenvIO(object):
             data={'sg_permissions_users': users}
         )
 
-    def update_environment(self, code, engine, requires, project, id=None):
+    def update_environment(
+        self,
+        code,
+        engine,
+        requires,
+        software_versions,
+        project,
+        id=None
+    ):
         '''Create or update an environment.
 
         Arguments:
@@ -440,6 +465,7 @@ class CpenvIO(object):
             'code': code,
             'sg_engine': engine,
             'sg_requires': requires,
+            'sg_software_versions': software_versions,
             'project': project,
         }
 
