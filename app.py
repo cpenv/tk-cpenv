@@ -144,28 +144,19 @@ class CpenvApplication(sgtk.platform.Application):
             self.exception('Failed to resolve cpenv modules.')
             raise
 
+    def clear_active_modules(self):
+        self.cpenv.api._active_modules[:] = []
+
     def activate(self, requirements):
         '''Wraps cpenv.activate'''
 
         self.debug('Activating modules...')
         try:
 
-            # Resolve
-            resolver = self.cpenv.Resolver(self.cpenv.get_repos())
-            module_specs = resolver.resolve(requirements)
+            # Clear existing modules first
+            self.clear_active_modules()
 
-            # Localize
-            localizer = self.cpenv.Localizer(to_repo='home')
-            modules = localizer.localize(module_specs)
-
-            # Build Environment
-            activator = self.cpenv.Activator()
-            env = activator.combine_modules(modules)
-
-            # Set Env
-            self.cpenv.mappings.set_env(env)
-
-            return modules
+            return self.cpenv.activate(requirements)
 
         except Exception:
             self.exception('Failed to activate cpenv modules.')
