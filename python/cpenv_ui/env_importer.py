@@ -191,6 +191,7 @@ class EnvImporter(QtGui.QDialog):
                 code=env['code'],
                 engine=env['sg_engine'],
                 requires=env['sg_requires'],
+                software_versions=env['sg_software_versions'],
                 project=app.context.project,
             )
 
