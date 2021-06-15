@@ -28,6 +28,7 @@ class ModuleList(QtGui.QTreeWidget):
         super(ModuleList, self).__init__(parent=parent)
 
         self.setObjectName(name)
+        self.sortByColumn(0, QtCore.Qt.AscendingOrder)
         self.setSortingEnabled(True)
         self.setAlternatingRowColors(True)
         self.setMinimumWidth(200)
