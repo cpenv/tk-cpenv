@@ -283,7 +283,6 @@ class CpenvIO(object):
             'Project',
             filters=[
                 ['is_demo', 'is', False],
-                ['is_template', 'is', False],
                 ['archived', 'is', False],
             ],
             fields=['name', 'id', 'type'],
