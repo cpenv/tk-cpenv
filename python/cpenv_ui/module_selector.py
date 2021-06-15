@@ -268,7 +268,8 @@ class ModuleSelector(QtGui.QWidget):
         self.set_saved(message='')
 
     def _update_env_lock(self):
-        is_locked = bool(self.state['environment'].get('sg_permissions_users'))
+        env = self.state.get('environment') or {}
+        is_locked = bool(env.get('sg_permissions_users'))
         icon = [
             QtGui.QIcon(res.get_path('lock_open.png')),
             QtGui.QIcon(res.get_path('lock.png')),
