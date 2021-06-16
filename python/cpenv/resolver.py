@@ -203,11 +203,11 @@ class Localizer(object):
         self.reporter.start_localize(module_specs)
         localized = []
         for module_spec in module_specs:
+            self.reporter.localize_module(module_spec, None)
 
             # Module is already local
             if isinstance(module_spec.repo, LocalRepo):
                 localized.append(Module(module_spec.path))
-                self.reporter.localize_module(module_spec, localized[-1])
                 continue
 
             # Module already exists in to_repo
@@ -217,11 +217,9 @@ class Localizer(object):
                 if is_exact_match(module_spec.qual_name, match):
                     already_exists = True
                     localized.append(Module(match.path))
-                    self.reporter.localize_module(module_spec, localized[-1])
                     break
 
             if already_exists and not overwrite:
-                self.reporter.localize_module(module_spec, localized[-1])
                 continue
 
             # Generate a new module path in to_repo
@@ -241,7 +239,6 @@ class Localizer(object):
                 overwrite=overwrite,
             )
             localized.append(module)
-            self.reporter.localize_module(module_spec, localized[-1])
 
         self.reporter.end_localize(localized)
 
