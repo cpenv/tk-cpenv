@@ -55,6 +55,43 @@ class CpenvApplication(sgtk.platform.Application):
     ModuleSpecSet = ModuleSpecSet
 
     def init_app(self):
+
+        try:
+            # Check if we should register this app by comparing
+            # deny_permissions to the user's permission group
+            # deny_permissions via info.yml only works for tk-shotgun
+            filters = [['id', 'is', self.context.user['id']]]
+            fields = ['permission_rule_set']
+            user_data = self.shotgun.find_one('HumanUser', filters, fields)
+            permission_group = user_data.get('permission_rule_set')['name']
+            
+            if permission_group in self.get_setting('deny_permissions'):
+                self.logger.warning("{}'s permission group ({}) does not have permission to access this app because of deny_permissions. Not loading app!".format(self.context.user['name'], permission_group))
+                return
+        except Exception as e:
+            self.logger.error(e)
+            return
+
+        try:
+            # Check if we should register this app by comparing
+            # deny_platforms to the current platform
+            # deny_platforms via info.yml only works for tk-shotgun
+            current_platform = None
+            if sgtk.util.is_windows():
+                current_platform = 'windows'
+            if sgtk.util.is_macos():
+                current_platform = 'mac'
+            if sgtk.util.is_linux():
+                current_platform = 'linux'
+
+            if current_platform in self.get_setting('deny_platforms'):
+                self.logger.warning('This app is not allowed to load from {}!'.format(current_platform))
+                return
+        except Exception as e:
+            self.logger.error(e)   
+            return     
+
+
         self.ui = self.import_module('cpenv_ui')
         self.cpenv = self.import_module('cpenv')
 
@@ -69,7 +106,7 @@ class CpenvApplication(sgtk.platform.Application):
 
         # Register Set Modules command to show the ModuleSelector dialog
         self.engine.register_command(
-            'Set Modules',
+            self.get_setting('display_name'),
             self.show_module_selector,
         )
 
