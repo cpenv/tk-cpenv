@@ -56,6 +56,18 @@ class CpenvApplication(sgtk.platform.Application):
 
     def init_app(self):
 
+        self.ui = self.import_module('cpenv_ui')
+        self.cpenv = self.import_module('cpenv')
+
+        # Setup UIReporter
+        class _UIReporter(self.ui.UIReporter, self.cpenv.Reporter):
+            '''Mix UIReporter with Reporter base class and inject deps.'''
+
+        self.cpenv.set_reporter(_UIReporter(self, self.engine))
+
+        # Setup ShotgunRepo
+        self.io = CpenvIO(self)
+
         try:
             # Check if we should register this app by comparing
             # deny_permissions to the user's permission group
@@ -85,24 +97,11 @@ class CpenvApplication(sgtk.platform.Application):
                 current_platform = 'linux'
 
             if current_platform in self.get_setting('deny_platforms'):
-                self.logger.warning('This app is not allowed to load from {}!'.format(current_platform))
+                self.logger.warning('This app is not allowed to load (deny_platforms) from {}!'.format(current_platform))
                 return
         except Exception as e:
             self.logger.error(e)   
             return     
-
-
-        self.ui = self.import_module('cpenv_ui')
-        self.cpenv = self.import_module('cpenv')
-
-        # Setup UIReporter
-        class _UIReporter(self.ui.UIReporter, self.cpenv.Reporter):
-            '''Mix UIReporter with Reporter base class and inject deps.'''
-
-        self.cpenv.set_reporter(_UIReporter(self, self.engine))
-
-        # Setup ShotgunRepo
-        self.io = CpenvIO(self)
 
         # Register Set Modules command to show the ModuleSelector dialog
         self.engine.register_command(
