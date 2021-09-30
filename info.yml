@@ -12,6 +12,30 @@
 
 # expected fields in the configuration file for this engine
 configuration:
+
+  deny_ui_permissions:
+    type: list
+    values: {type: shotgun_permission_group}
+    allows_empty: True
+    description: "An optional parameter which lets you limit the visibility of this app.
+                  If you for example put in ['Artist'] as the value for this parameter,
+                  any user belonging to the ShotGrid permissions group Artist will not be
+                  able to see or execute the App."
+
+  deny_ui_platforms:
+      type: list
+      values: {type: str}
+      allows_empty: True
+      description: "An optional parameter which lets you turn off this app on certain platforms.
+                    If you don't want it to appear on the ShotGrid Pipeline Toolkit action menu for
+                    a platform, just include it in the the deny_ui_platforms list. Valid values are
+                    Windows, Mac and Linux."
+  
+  display_name:
+    type: str
+    default_value: Set Modules
+    description: "The display name of the app inside the engine."
+
   home_path:
     type: str
     description: Where to store modules locally. Defaults to C:/ProgramData/cpenv on Windows, /Library/Application Support/cpenv on Mac, /usr/local/share/cpenv or /usr/share/cpenv on Linux OR the value of CPENV_HOME envvar.
