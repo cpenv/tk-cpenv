@@ -4,6 +4,41 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [v0.5.5](https://github.com/cpenv/tk-cpenv/releases/tag/v0.5.5) - 2021-09-30
+
+<small>[Compare with v0.5.4](https://github.com/cpenv/tk-cpenv/compare/v0.5.4...v0.5.5)</small>
+
+### Added
+- Added deny_permissions, deny_platforms and display_name setting support ([f4543bd](https://github.com/cpenv/tk-cpenv/commit/f4543bd0c52f71e13253a00bd7077f23e637c745) by Ricardo Musch).
+
+### Changed
+- Changed names to include ui ([ec68670](https://github.com/cpenv/tk-cpenv/commit/ec686700e70edba3ddafee907f34dc1c1384b9b9) by RicardoMusch).
+
+
+## [v0.5.4](https://github.com/cpenv/tk-cpenv/releases/tag/v0.5.4) - 2021-09-01
+
+<small>[Compare with v0.5.3](https://github.com/cpenv/tk-cpenv/compare/v0.5.3...v0.5.4)</small>
+
+
+## [v0.5.3](https://github.com/cpenv/tk-cpenv/releases/tag/v0.5.3) - 2021-06-16
+
+<small>[Compare with v0.5.2](https://github.com/cpenv/tk-cpenv/compare/v0.5.2...v0.5.3)</small>
+
+
+## [v0.5.2](https://github.com/cpenv/tk-cpenv/releases/tag/v0.5.2) - 2021-06-15
+
+<small>[Compare with v0.5.1](https://github.com/cpenv/tk-cpenv/compare/v0.5.1...v0.5.2)</small>
+
+### Fixed
+- Fix lock button error when missing environment. ([051d403](https://github.com/cpenv/tk-cpenv/commit/051d403369f88b81e92bdbb738491d4aa6353a78) by Dan Bradham).
+- Fix sort order of available list. ([beceb29](https://github.com/cpenv/tk-cpenv/commit/beceb293fe271424243858cf9e6e3b52388f81cb) by Dan Bradham).
+
+
+## [v0.5.1](https://github.com/cpenv/tk-cpenv/releases/tag/v0.5.1) - 2021-06-11
+
+<small>[Compare with v0.5.0](https://github.com/cpenv/tk-cpenv/compare/v0.5.0...v0.5.1)</small>
+
+
 ## [v0.5.0](https://github.com/cpenv/tk-cpenv/releases/tag/v0.5.0) - 2021-06-04
 
 <small>[Compare with v0.4.0](https://github.com/cpenv/tk-cpenv/compare/v0.4.0...v0.5.0)</small>
