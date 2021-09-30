@@ -70,15 +70,15 @@ class CpenvApplication(sgtk.platform.Application):
 
         try:
             # Check if we should register this app by comparing
-            # deny_permissions to the user's permission group
-            # deny_permissions via info.yml only works for tk-shotgun
+            # deny_ui_permissions to the user's permission group
+            # deny_ui_permissions via info.yml only works for tk-shotgun
             filters = [['id', 'is', self.context.user['id']]]
             fields = ['permission_rule_set']
             user_data = self.shotgun.find_one('HumanUser', filters, fields)
             permission_group = user_data.get('permission_rule_set')['name']
             
-            if permission_group in self.get_setting('deny_permissions'):
-                self.logger.warning("{}'s permission group ({}) does not have permission to access this app because of deny_permissions. Not loading app!".format(self.context.user['name'], permission_group))
+            if permission_group in self.get_setting('deny_ui_permissions'):
+                self.logger.warning("{}'s permission group ({}) does not have permission to access this app because of deny_ui_permissions. Not loading app!".format(self.context.user['name'], permission_group))
                 return
         except Exception as e:
             self.logger.error(e)
@@ -86,8 +86,8 @@ class CpenvApplication(sgtk.platform.Application):
 
         try:
             # Check if we should register this app by comparing
-            # deny_platforms to the current platform
-            # deny_platforms via info.yml only works for tk-shotgun
+            # deny_ui_platforms to the current platform
+            # deny_ui_platforms via info.yml only works for tk-shotgun
             current_platform = None
             if sgtk.util.is_windows():
                 current_platform = 'windows'
@@ -96,8 +96,8 @@ class CpenvApplication(sgtk.platform.Application):
             if sgtk.util.is_linux():
                 current_platform = 'linux'
 
-            if current_platform in self.get_setting('deny_platforms'):
-                self.logger.warning('This app is not allowed to load (deny_platforms) from {}!'.format(current_platform))
+            if current_platform in self.get_setting('deny_ui_platforms'):
+                self.logger.warning('This app is not allowed to load (deny_ui_platforms) from {}!'.format(current_platform))
                 return
         except Exception as e:
             self.logger.error(e)   

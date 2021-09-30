@@ -13,7 +13,7 @@
 # expected fields in the configuration file for this engine
 configuration:
 
-  deny_permissions:
+  deny_ui_permissions:
     type: list
     values: {type: shotgun_permission_group}
     allows_empty: True
@@ -22,13 +22,13 @@ configuration:
                   any user belonging to the ShotGrid permissions group Artist will not be
                   able to see or execute the App."
 
-  deny_platforms:
+  deny_ui_platforms:
       type: list
       values: {type: str}
       allows_empty: True
       description: "An optional parameter which lets you turn off this app on certain platforms.
                     If you don't want it to appear on the ShotGrid Pipeline Toolkit action menu for
-                    a platform, just include it in the the deny_platforms list. Valid values are
+                    a platform, just include it in the the deny_ui_platforms list. Valid values are
                     Windows, Mac and Linux."
   
   display_name:
