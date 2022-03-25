@@ -99,11 +99,11 @@ class ProgressDialog(QtGui.QDialog):
         raise RuntimeError(self.label.text() + ' cancelled.')
 
     def accept(self):
-        super(ErrorDialog, self).accept()
+        super(ProgressDialog, self).accept()
         self.close()
 
     def reject(self):
-        super(ErrorDialog, self).reject()
+        super(ProgressDialog, self).reject()
         self.close()
 
     @property
