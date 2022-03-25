@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [v0.5.7](https://github.com/cpenv/tk-cpenv/releases/tag/v0.5.7) - 2022-03-25
+
+<small>[Compare with v0.5.6](https://github.com/cpenv/tk-cpenv/compare/v0.5.6...v0.5.7)</small>
+
+### Fixed
+- Fix super calls in progressdialog. ([75b763a](https://github.com/cpenv/tk-cpenv/commit/75b763ac6d278a52936f3449abca320f5ff2a83d) by Dan Bradham).
+
+
 ## [v0.5.6](https://github.com/cpenv/tk-cpenv/releases/tag/v0.5.6) - 2022-02-02
 
 <small>[Compare with v0.5.5](https://github.com/cpenv/tk-cpenv/compare/v0.5.5...v0.5.6)</small>
