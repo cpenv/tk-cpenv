@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [v0.5.8](https://github.com/cpenv/tk-cpenv/releases/tag/v0.5.8) - 2022-04-01
+
+<small>[Compare with v0.5.7](https://github.com/cpenv/tk-cpenv/compare/v0.5.7...v0.5.8)</small>
+
+### Added
+- Add duplicate and rename tools to ui. ([31e866e](https://github.com/cpenv/tk-cpenv/commit/31e866e0c1c2325ea22a15dd8e1ecd493a114f06) by Dan Bradham).
+- Add duplicate_environment method to io object. ([778ba75](https://github.com/cpenv/tk-cpenv/commit/778ba75ddba2ecfc3a7a3e4944af3d73345a16ad) by Dan Bradham).
+- Add edit icon. ([41b2d71](https://github.com/cpenv/tk-cpenv/commit/41b2d71abce008dd9b4bc0fba5abc83b9b9dccac) by Dan Bradham).
+
+
 ## [v0.5.7](https://github.com/cpenv/tk-cpenv/releases/tag/v0.5.7) - 2022-03-25
 
 <small>[Compare with v0.5.6](https://github.com/cpenv/tk-cpenv/compare/v0.5.6...v0.5.7)</small>
