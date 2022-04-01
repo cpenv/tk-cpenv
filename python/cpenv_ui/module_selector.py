@@ -88,6 +88,10 @@ class ModuleSelector(QtGui.QWidget):
             icon=QtGui.QIcon(res.get_path('import.png'))
         )
         self.env_import.setToolTip('Import environments from another project.')
+        self.env_copy = QtGui.QToolButton(
+            icon=QtGui.QIcon(res.get_path('copy.png'))
+        )
+        self.env_copy.setToolTip('Duplicate current environment.')
         self.env_add = QtGui.QToolButton(
             icon=QtGui.QIcon(res.get_path('add.png'))
         )
@@ -96,6 +100,10 @@ class ModuleSelector(QtGui.QWidget):
             icon=QtGui.QIcon(res.get_path('remove.png'))
         )
         self.env_remove.setToolTip('Delete current environment.')
+        self.env_rename = QtGui.QToolButton(
+            icon=QtGui.QIcon(res.get_path('edit.png'))
+        )
+        self.env_rename.setToolTip('Rename current environment.')
         self.env_preview = QtGui.QToolButton(
             icon=QtGui.QIcon(res.get_path('preview.png'))
         )
@@ -109,6 +117,8 @@ class ModuleSelector(QtGui.QWidget):
         self.env_header.addWidget(self.env_import)
         self.env_header.addWidget(self.env_add)
         self.env_header.addWidget(self.env_remove)
+        self.env_header.addWidget(self.env_copy)
+        self.env_header.addWidget(self.env_rename)
         self.env_header.addWidget(self.env_preview)
         self.env_header.addWidget(self.env_lock)
 
@@ -194,8 +204,10 @@ class ModuleSelector(QtGui.QWidget):
         self.engine_list.activated.connect(self.on_engine_changed)
         self.sw_versions_edit.textEdited.connect(self.on_sw_versions_changed)
         self.env_import.clicked.connect(self.on_env_import_clicked)
+        self.env_copy.clicked.connect(self.on_env_copy_clicked)
         self.env_add.clicked.connect(self.on_env_add_clicked)
         self.env_remove.clicked.connect(self.on_env_remove_clicked)
+        self.env_rename.clicked.connect(self.on_env_rename_clicked)
         self.env_preview.clicked.connect(self.on_env_preview_clicked)
         self.env_lock.clicked.connect(self.on_env_lock_clicked)
         self.env_list.activated.connect(self.on_env_changed)
@@ -265,7 +277,14 @@ class ModuleSelector(QtGui.QWidget):
         self._update_engine_list()
         self._update_sw_versions()
         self._update_selected_list()
+        self._update_env_tools_requiring_environment()
         self.set_saved(message='')
+
+    def _update_env_tools_requiring_environment(self):
+        enabled = bool(self.state['environment'])
+        self.env_copy.setEnabled(enabled)
+        self.env_remove.setEnabled(enabled)
+        self.env_rename.setEnabled(enabled)
 
     def _update_env_lock(self):
         env = self.state.get('environment') or {}
@@ -520,6 +539,39 @@ class ModuleSelector(QtGui.QWidget):
         self.update_state()
         self.update_widgets()
 
+    def on_env_copy_clicked(self):
+        env_names = [e['code'] for e in self.state['environments']]
+        while True:
+            name, ok = QtGui.QInputDialog.getText(
+                self,
+                'Duplicate Environment',
+                'New Name:',
+                QtGui.QLineEdit.Normal,
+                self.state['environment']['code'],
+            )
+            if ok and name in env_names:
+                error_message = ErrorDialog(
+                    label='Environment already exists:',
+                    message='Please choose another name.',
+                    parent=self,
+                )
+                error_message.exec_()
+            elif ok:
+                # Exit retry loop
+                break
+            else:
+                # Canceled
+                return
+
+        # Duplicate env
+        new_env = app.io.duplicate_environment(name, self.state['environment'])
+        self.state['environments'].append(new_env)
+        self.state['environment'] = new_env
+
+        # Update state and ui
+        self.update_state()
+        self.update_widgets()
+
     def on_env_import_clicked(self):
         app.info('Import clicked.')
         importer = EnvImporter(self)
@@ -576,7 +628,6 @@ class ModuleSelector(QtGui.QWidget):
             self.set_unsaved()
 
     def on_item_dropped(self):
-
         old_keys = list(self.state['selected'].keys())
         new_keys = []
 
@@ -624,3 +675,40 @@ class ModuleSelector(QtGui.QWidget):
             )
             error_message.exec_()
             app.execption(message)
+
+    def on_env_rename_clicked(self):
+        env_names = [e['code'] for e in self.state['environments']]
+        while True:
+            name, ok = QtGui.QInputDialog.getText(
+                self,
+                'Rename Environment',
+                'New Name:',
+                QtGui.QLineEdit.Normal,
+                self.state['environment']['code'],
+            )
+            if ok and name in env_names:
+                error_message = ErrorDialog(
+                    label='Environment already exists:',
+                    message='Please choose another name.',
+                    parent=self,
+                )
+                error_message.exec_()
+            elif ok:
+                # Exit retry loop
+                break
+            else:
+                # Canceled
+                return
+
+
+        # Duplicate env
+        app.io.shotgun.update(
+            self.state['environment']['type'],
+            entity_id=self.state['environment']['id'],
+            data={'code': name}
+        )
+        self.state['environment']['code'] = name
+
+        # Update state and ui
+        self.update_state()
+        self.update_widgets()

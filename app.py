@@ -13,7 +13,7 @@ class ModuleSpecSet(object):
     multiple versions of a single Module.
     '''
 
-    # TODO: This is a very useful class - should be moved into the cpenv to be
+    # TODO: This is a very useful class - should be moved into cpenv to be
     #       used in a standalone cpenv qt application.
 
     def __init__(self, module_specs):
@@ -469,7 +469,7 @@ class CpenvIO(object):
         requires,
         software_versions,
         project,
-        id=None
+        id=None,
     ):
         '''Create or update an environment.
 
@@ -518,6 +518,29 @@ class CpenvIO(object):
                 data=data,
             )
         return entity
+
+    def duplicate_environment(self, code, entity):
+        '''Duplicate an environment with a new code.'''
+
+        data = dict(entity)
+        data.pop('type', None)
+        data.pop('id', None)
+        data['code'] = code
+
+        new_entity = self.shotgun.create(
+            self.environment_entity,
+            data=data,
+            return_fields=[
+                'code',
+                'id',
+                'project',
+                'sg_engine',
+                'sg_permissions_users',
+                'sg_requires',
+                'sg_software_versions',
+            ],
+        )
+        return new_entity
 
     def delete_environment(self, id):
         '''Delete an Environment by id.'''
