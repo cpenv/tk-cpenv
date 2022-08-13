@@ -576,7 +576,8 @@ class CpenvIO(object):
         '''Get a list of engine names and codes from configured Software entities.
 
         Prior to 0.5.10, this method only returned engine names. However, some Software
-        entities do not have toolkit engines, so we now return software codes as well.
+        entities do not have toolkit engines, so we now return software codes for those
+        entties.
         '''
 
         entities = self.shotgun.find(
@@ -588,12 +589,22 @@ class CpenvIO(object):
             return []
 
         entities = sorted(entities, key=lambda e: e.get('code', e.get('engine', '')))
+
         results = []
         for entity in entities:
-            if entity.get('code') and entity.get('code') not in results:
-                results.append(entity['code'])
-            if entity.get('engine') and entity.get('engine') not in results:
-                results.append(entity['engine'])
+
+            engine, software = entity.get('engine'), entity.get('code')
+
+            if engine in results or software in results:
+                continue
+
+            if engine:
+                results.append(engine)
+                continue
+
+            if software:
+                results.append(software)
+
         return list(results)
 
     def get_module_spec_sets(self):
