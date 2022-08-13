@@ -261,14 +261,16 @@ class CpenvApplication(sgtk.platform.Application):
         module_paths = self.get_setting('module_paths') or []
         self.set_module_paths(module_paths)
 
-        # Get engine name
+        # Get engine or software code
+        software = None
+        engine = engine_name
         if software_entity:
+            software = software_entity.get('code')
             engine = software_entity.get('engine', engine_name)
-        else:
-            engine = engine_name
 
         # Get Environment for engine
         environments = self.io.get_environments(
+            software=software,
             engine=engine,
             user=self.context.user,
             software_versions=version,
@@ -330,6 +332,7 @@ class CpenvIO(object):
     def get_environment(
         self,
         project=None,
+        software=None,
         engine=None,
         name=None,
         user=None,
@@ -359,8 +362,17 @@ class CpenvIO(object):
                     ['sg_permissions_users', 'is', None],
                 ]
             })
-        if engine:
-            filters.append(['sg_engine', 'is', engine])
+        if software or engine:
+            sw_engine_filters = []
+            if software:
+                sw_engine_filters.append(['sg_engine', 'is', software])
+            if engine:
+                sw_engine_filters.append(['sg_engine', 'is', engine])
+            sw_engine_filters = {
+                'filter_operator': 'any',
+                'filters': sw_engine_filters,
+            }
+            filters.append(sw_engine_filters)
         if name:
             filters.append(['code', 'is', name])
         if requires:
@@ -387,6 +399,7 @@ class CpenvIO(object):
     def get_environments(
         self,
         project=None,
+        software=None,
         engine=None,
         name=None,
         user=None,
@@ -415,8 +428,17 @@ class CpenvIO(object):
                     ['sg_permissions_users', 'is', None],
                 ]
             })
-        if engine:
-            filters.append(['sg_engine', 'is', engine])
+        if software or engine:
+            sw_engine_filters = []
+            if software:
+                sw_engine_filters.append(['sg_engine', 'is', software])
+            if engine:
+                sw_engine_filters.append(['sg_engine', 'is', engine])
+            sw_engine_filters = {
+                'filter_operator': 'any',
+                'filters': sw_engine_filters,
+            }
+            filters.append(sw_engine_filters)
         if name:
             filters.append(['code', 'is', name])
         if requires:
@@ -551,15 +573,39 @@ class CpenvIO(object):
         )
 
     def get_engines(self):
-        '''Get a list of engine names from configured Software entities.'''
+        '''Get a list of engine names and codes from configured Software entities.
 
-        entities = self.shotgun.find('Software', [], ['engine'])
+        Prior to 0.5.10, this method only returned engine names. However, some Software
+        entities do not have toolkit engines, so we now return software codes for those
+        entties.
+        '''
+
+        entities = self.shotgun.find(
+            'Software',
+            filters=[['sg_status_list', 'is', 'act']],
+            fields=['engine', 'code'],
+        )
         if not entities:
             return []
 
-        return list(
-            sorted(set([e['engine'] for e in entities if e['engine']]))
-        )
+        entities = sorted(entities, key=lambda e: e.get('code', e.get('engine', '')))
+
+        results = []
+        for entity in entities:
+
+            engine, software = entity.get('engine'), entity.get('code')
+
+            if engine in results or software in results:
+                continue
+
+            if engine:
+                results.append(engine)
+                continue
+
+            if software:
+                results.append(software)
+
+        return list(results)
 
     def get_module_spec_sets(self):
         '''Get a list of all the Modules stored in Shotgun.

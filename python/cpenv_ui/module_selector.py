@@ -122,12 +122,9 @@ class ModuleSelector(QtGui.QWidget):
         self.env_header.addWidget(self.env_preview)
         self.env_header.addWidget(self.env_lock)
 
-        self.engine_label = QtGui.QLabel('Engine')
+        self.engine_label = QtGui.QLabel('Engine or Software')
         self.engine_label.setToolTip(
-            'The toolkit engine this environment applies to.'
-        )
-        self.engine_label.setToolTip(
-            'Select a toolkit engine this environment applies to.'
+            'Select an Engine or Software this environment applies to.'
         )
         self.engine_list = QtGui.QComboBox()
         self.engine_list.setFixedHeight(24)
