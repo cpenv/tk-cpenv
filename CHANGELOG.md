@@ -4,6 +4,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [v0.5.10](https://github.com/cpenv/tk-cpenv/releases/tag/v0.5.10) - 2022-08-13
+
+<small>[Compare with v0.5.9](https://github.com/cpenv/tk-cpenv/compare/v0.5.9...v0.5.10)</small>
+
+### Added
+- Add support for software codes for environment lookup. ([3603353](https://github.com/cpenv/tk-cpenv/commit/36033530cdbb4c71babc4110440820fa5358ca15) by Dan Bradham).
+
+### Fixed
+- Fix include software code only when engine is undefined. ([97f50fe](https://github.com/cpenv/tk-cpenv/commit/97f50fe18b5950c955eb557d63468bf3100ec2a2) by Dan Bradham).
+
+
+## [v0.5.9](https://github.com/cpenv/tk-cpenv/releases/tag/v0.5.9) - 2022-06-14
+
+<small>[Compare with v0.5.8](https://github.com/cpenv/tk-cpenv/compare/v0.5.8...v0.5.9)</small>
+
+
 ## [v0.5.8](https://github.com/cpenv/tk-cpenv/releases/tag/v0.5.8) - 2022-04-01
 
 <small>[Compare with v0.5.7](https://github.com/cpenv/tk-cpenv/compare/v0.5.7...v0.5.8)</small>
