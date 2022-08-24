@@ -2,7 +2,6 @@
 from __future__ import print_function
 
 # Standard library imports
-import traceback
 
 # Shotgun imports
 import sgtk
@@ -53,17 +52,15 @@ class EnvPermissions(QtGui.QDialog):
 
     def on_initialized(self):
         app.debug('ON_INITIALIZED')
-        try:
-            self.editor = self._fields_manager.create_widget(
-                sg_entity_type=self.state['environment']['type'],
-                field_name='sg_permissions_users',
-                widget_type=self._fields_manager.EDITOR,
-                entity=self.state['environment'],
-                parent=self,
-            )
-            self.layout.insertWidget(1, self.editor)
-        except Exception:
-            app.debug(traceback.format_exc())
+
+        self.editor = self._fields_manager.create_widget(
+            sg_entity_type=self.state['environment']['type'],
+            field_name='sg_permissions_users',
+            widget_type=self._fields_manager.EDITOR,
+            entity=self.state['environment'],
+            parent=self,
+        )
+        self.layout.insertWidget(1, self.editor)
 
     def on_cancel_clicked(self):
         self.reject()
@@ -71,13 +68,10 @@ class EnvPermissions(QtGui.QDialog):
     def on_save_clicked(self):
         users = self.editor.get_value()
 
-        try:
-            app.io.set_environment_permissions(
-                self.state['environment']['id'],
-                users,
-            )
-            self.state['environment']['sg_permissions_users'] = users
-        except Exception:
-            app.debug(traceback.format_exc())
+        app.io.set_environment_permissions(
+            self.state['environment']['id'],
+            users,
+        )
+        self.state['environment']['sg_permissions_users'] = users
 
         self.accept()

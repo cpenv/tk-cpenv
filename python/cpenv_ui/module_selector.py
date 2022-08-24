@@ -407,8 +407,9 @@ class ModuleSelector(QtGui.QWidget):
             if save:
                 self._update_env_lock()
         except Exception:
+            app.logger.exception('Error occurred with Permissions Dialog.')
             error_message = ErrorDialog(
-                label='Failed to open Permissions Dialog.',
+                label='Error occurred with Permissions Dialog.',
                 message=traceback.format_exc(),
                 parent=self,
             )
