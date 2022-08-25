@@ -52,15 +52,17 @@ class EnvPermissions(QtGui.QDialog):
 
     def on_initialized(self):
         app.debug('ON_INITIALIZED')
-
-        self.editor = self._fields_manager.create_widget(
-            sg_entity_type=self.state['environment']['type'],
-            field_name='sg_permissions_users',
-            widget_type=self._fields_manager.EDITOR,
-            entity=self.state['environment'],
-            parent=self,
-        )
-        self.layout.insertWidget(1, self.editor)
+        try:
+            self.editor = self._fields_manager.create_widget(
+                sg_entity_type=self.state['environment']['type'],
+                field_name='sg_permissions_users',
+                widget_type=self._fields_manager.EDITOR,
+                entity=self.state['environment'],
+                parent=self,
+            )
+            self.layout.insertWidget(1, self.editor)
+        except Exception:
+            app.logger.exception('Error occurred during Permission Dialog initialization.')
 
     def on_cancel_clicked(self):
         self.reject()
@@ -68,10 +70,13 @@ class EnvPermissions(QtGui.QDialog):
     def on_save_clicked(self):
         users = self.editor.get_value()
 
-        app.io.set_environment_permissions(
-            self.state['environment']['id'],
-            users,
-        )
-        self.state['environment']['sg_permissions_users'] = users
+        try:
+            app.io.set_environment_permissions(
+                self.state['environment']['id'],
+                users,
+            )
+            self.state['environment']['sg_permissions_users'] = users
+        except Exception:
+            app.logger.exception('Error occurred during save in Permission Dialog.')
 
         self.accept()
