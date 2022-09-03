@@ -28,6 +28,7 @@ class ModuleInfo(QtGui.QWidget):
         super(ModuleInfo, self).__init__(parent=parent)
         self._spec = None
         self._default_icon = QtGui.QPixmap(res.get_path('module_256.png'))
+        self._missing_icon = QtGui.QPixmap(res.get_path('missing.png'))
 
         self.icon = QtGui.QLabel()
         self.icon.setFixedSize(48, 48)
@@ -130,6 +131,14 @@ class ModuleInfo(QtGui.QWidget):
         self._spec = None
 
     def set_module_spec(self, spec):
+        # Display error when module is missing.
+        if isinstance(spec, app.MissingModuleSpec):
+            self.clear_module_spec()
+            self.icon.setPixmap(self._missing_icon)
+            self.name.setText(spec.qual_name)
+            self.description.setText("Error: Module missing from ShotGrid repository!")
+            return
+
         # Show info
         self.info.show()
         self._spec = spec

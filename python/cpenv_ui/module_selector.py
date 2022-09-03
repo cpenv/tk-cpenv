@@ -255,7 +255,13 @@ class ModuleSelector(QtGui.QWidget):
 
             requires_text = self.state['environment']['sg_requires']
             requires = app.parse_requires(requires_text)
-            module_specs = app.resolve(requires)
+
+            # Resolve modules with dialog suppressed.
+            # This prevents popups and error messages while loading the UI.
+            reporter = app.cpenv.get_reporter()
+            with reporter.suppressed():
+                module_specs = app.resolve_with_missing_modules(requires)
+
             for spec in module_specs:
                 spec_set = self.state['available'].get(
                     spec.name,
