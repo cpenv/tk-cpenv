@@ -1,9 +1,16 @@
 # Standard library imports
 import os
 import traceback
+from collections import namedtuple
 
 # Shotgun imports
 import sgtk
+
+
+MissingModuleSpec = namedtuple(
+    "ModuleSpec",
+    ["name", "real_name", "qual_name", "version", "path", "repo"],
+)
 
 
 class ModuleSpecSet(object):
@@ -53,6 +60,7 @@ class ModuleSpecSet(object):
 class CpenvApplication(sgtk.platform.Application):
 
     ModuleSpecSet = ModuleSpecSet
+    MissingModuleSpec = MissingModuleSpec
 
     def init_app(self):
 
