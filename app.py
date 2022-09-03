@@ -281,7 +281,7 @@ class CpenvApplication(sgtk.platform.Application):
 
         self.debug('Found Environments: %s', environments)
 
-        if len(environments) == 2:
+        if len(environments) >= 2:
             env = self.show_environment_selector(environments)
         else:
             env = environments[0]
