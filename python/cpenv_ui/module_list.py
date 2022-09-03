@@ -5,6 +5,7 @@ from __future__ import print_function
 from functools import partial
 
 # Shotgun imports
+import sgtk
 from sgtk.platform.qt import QtCore, QtGui
 
 # PySide1 compat
@@ -13,6 +14,10 @@ try:
 except AttributeError:
     QtGui.QHeaderView.setSectionResizeMode = QtGui.QHeaderView.setResizeMode
 
+# Local imports
+from . import res
+
+app = sgtk.platform.current_bundle()
 
 # Tree Columns
 Name = 0
@@ -86,6 +91,8 @@ class ModuleList(QtGui.QTreeWidget):
     def on_version_changed(self, item, index):
         item.setText(Version, item.combo_box.currentText())
         item.spec_set.select(index)
+        self.styleize_item(item)
+
         self.version_changed.emit(item.spec_set)
 
     def create_item(self, spec_set):
@@ -98,6 +105,7 @@ class ModuleList(QtGui.QTreeWidget):
             | QtCore.Qt.ItemIsEnabled
             | QtCore.Qt.ItemIsDragEnabled
         )
+        self.styleize_item(item)
 
         # Add versions combobox
         item.combo_box = QtGui.QComboBox(parent=self)
@@ -111,6 +119,16 @@ class ModuleList(QtGui.QTreeWidget):
         ))
 
         return item
+
+    def styleize_item(self, item):
+        color = None
+        icon = None
+        if isinstance(item.spec_set.selection, app.MissingModuleSpec):
+            color = QtGui.QColor("#f15555")
+            icon = QtGui.QIcon(res.get_path('missing.png'))
+
+        item.setData(Name, QtCore.Qt.ForegroundRole, color)
+        item.setData(Name, QtCore.Qt.DecorationRole, icon)
 
     def insert_spec_set(self, index, spec_set):
         item = self.create_item(spec_set)
