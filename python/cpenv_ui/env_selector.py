@@ -36,11 +36,13 @@ class EnvSelector(QtGui.QDialog):
 
         buttons = []
         for environment in environments:
+            # Get formatted requirements for tooltip
+            requirements = 'No Requirements'
+            if environment.get('sg_requires'):
+                requirements = '\n'.join(environment['sg_requires'].split())
+
             button = QtGui.QPushButton(environment['code'])
-            button.setToolTip(
-                'Modules:\n'
-                + '\n'.join(environment['sg_requires'].split())
-            )
+            button.setToolTip('Modules:\n' + requirements)
             button.setObjectName('SelectButton')
             button.clicked.connect(self.choose(environment))
             buttons.append(button)
