@@ -2,7 +2,6 @@
 from __future__ import print_function
 
 # Standard library imports
-import traceback
 
 # Shotgun imports
 import sgtk
@@ -63,7 +62,7 @@ class EnvPermissions(QtGui.QDialog):
             )
             self.layout.insertWidget(1, self.editor)
         except Exception:
-            app.debug(traceback.format_exc())
+            app.logger.exception('Error occurred during Permission Dialog initialization.')
 
     def on_cancel_clicked(self):
         self.reject()
@@ -78,6 +77,6 @@ class EnvPermissions(QtGui.QDialog):
             )
             self.state['environment']['sg_permissions_users'] = users
         except Exception:
-            app.debug(traceback.format_exc())
+            app.logger.exception('Error occurred during save in Permission Dialog.')
 
         self.accept()
