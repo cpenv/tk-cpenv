@@ -178,15 +178,41 @@ class CpenvApplication(sgtk.platform.Application):
             self.exception('Failed to parse cpenv modules.')
             raise
 
-    def resolve(self, *args, **kwargs):
+    def resolve(self, requirements):
         '''Wraps cpenv.resolve'''
 
-        self.debug('Resolving %s' % args)
+        self.debug('Resolving %s' % requirements)
         try:
-            return self.cpenv.resolve(*args, **kwargs)
+            return self.cpenv.resolve(requirements)
         except Exception:
             self.exception('Failed to resolve cpenv modules.')
             raise
+
+    def resolve_with_missing_modules(self, requirements):
+        '''Wraps cpenv.resolve but returns MissingModuleSpecs for missing modules
+        instead of raising an exception.'''
+
+        self.debug('Resolving %s' % requirements)
+        module_specs = []
+        for requirement in requirements:
+            try:
+                module_specs.extend(self.cpenv.resolve([requirement]))
+            except Exception:
+                try:
+                    name, version_str = requirement.split('-')
+                    version = self.cpenv.parse_version(version_str)
+                    module_spec = MissingModuleSpec(
+                        name=name,
+                        real_name=name,
+                        qual_name=requirement,
+                        version=version,
+                        path=None,
+                        repo=None,
+                    )
+                    module_specs.append(module_spec)
+                except Exception:
+                    self.logger.warning("Failed to resolve: %s" % requirement)
+        return module_specs
 
     def clear_active_modules(self):
         self.cpenv.api._active_modules[:] = []
