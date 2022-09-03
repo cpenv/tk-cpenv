@@ -4,6 +4,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [v0.5.11](https://github.com/cpenv/tk-cpenv/releases/tag/v0.5.11) - 2022-09-03
+
+<small>[Compare with v0.5.10](https://github.com/cpenv/tk-cpenv/compare/v0.5.10...v0.5.11)</small>
+
+### Added
+- Add red indicator to missing modules in modulelist widgets. ([88ebf6f](https://github.com/cpenv/tk-cpenv/commit/88ebf6f8b454466b5a1ec436e27ed953bbaf8dd8) by Dan Bradham).
+- Add missing icon. ([70ed738](https://github.com/cpenv/tk-cpenv/commit/70ed738c01c9bd0e81aa955ddbeaade85e530f3d) by Dan Bradham).
+- Add resolve_with_missing_modules method. ([df0d1de](https://github.com/cpenv/tk-cpenv/commit/df0d1de509312e8c37df3ba23a4e0c6ca4749b68) by Dan Bradham).
+- Add missingmodulespec type. ([5ce952d](https://github.com/cpenv/tk-cpenv/commit/5ce952dd1ad0a46a2e7aed14fa1e17e77b2adb06) by Dan Bradham).
+
+### Fixed
+- Fix exception in env selector when environment has no requirements. ([de5f880](https://github.com/cpenv/tk-cpenv/commit/de5f880930829461c131c1ced2a2ed9f6b485378) by Dan Bradham).
+- Fix condition for showing environment selector. ([c7e33ec](https://github.com/cpenv/tk-cpenv/commit/c7e33ec1920ff3e9d22eb881121419cec2b90741) by Dan Bradham).
+
+
 ## [v0.5.10](https://github.com/cpenv/tk-cpenv/releases/tag/v0.5.10) - 2022-08-13
 
 <small>[Compare with v0.5.9](https://github.com/cpenv/tk-cpenv/compare/v0.5.9...v0.5.10)</small>
