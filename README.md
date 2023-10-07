@@ -50,7 +50,7 @@ environment_entity keys will be specific to your shotgun site.
 
 ## Add fields to your new entities
 The app will ask you if you want to automatically create the required app fields when you launch the app.
-<img src="./images/missing_fields.png" width="256"/>
+<img src="./images/missing_fields.png" width="512"/>
 
 If you prefer to create them manually, here are the fields you need to add.
 
