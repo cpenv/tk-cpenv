@@ -19,6 +19,7 @@ The module.yml file can set environment variables that use the $PLATFORM
 variable to choose which plugin to provision at runtime.
 
 # Features
+- Create required app fields on first launch
 - Store modules directly in your shotgun site
 - Localize modules when launching applications
 - Build Environments (a list of modules) to be activated per job and toolkit engine.
