@@ -201,6 +201,10 @@ class CpenvApplication(sgtk.platform.Application):
                 self.logger.error(
                     'The entity {} does not have the required field "{}"!'.format(environment_entity, field))
 
+        # # debug
+        # module_fields_missing = ['sg_archive', 'sg_archive_size', 'sg_author', 'sg_data', 'sg_email', 'sg_version']
+        # environment_fields_missing = ['sg_software_versions', 'sg_engine', 'sg_permissions_users', 'sg_requires']
+
         if not module_fields_missing and not environment_fields_missing:
             self.logger.info('tk-cpenv: All required fields are present.')
             return True
@@ -209,19 +213,25 @@ class CpenvApplication(sgtk.platform.Application):
         msg = ""
 
         if module_fields_missing:
-            msg += 'The entity {} (Module Entity) is missing the following fields:'.format(module_entity)
+            msg += 'The entity {} (Module Entity) is missing the following fields:'.format(
+                module_entity)
             for field in module_fields_missing:
-                msg += '\n\t- {}'.format(field)
+                msg += '\n\t \U0000274C {}'.format(field)
             self.logger.error(msg)
 
         if environment_fields_missing:
-            msg += '\n\nThe entity {} (Environment Entity) is missing the following fields:'.format(environment_entity)
+            if not module_fields_missing:
+                msg += 'The entity {} (Environment Entity) is missing the following fields:'.format(
+                    environment_entity)
+            else:
+                msg += '\n\nThe entity {} (Environment Entity) is missing the following fields:'.format(
+                    environment_entity)
             for field in environment_fields_missing:
-                msg += '\n\t- {}'.format(field)
+                msg += '\n\t \U0000274C {}'.format(field)
             self.logger.error(msg)
 
         # display message box
-        msg += '\n\nDo you want to create these fields now? \n(Requires Admin Permissions on ShotGrid)'
+        msg += '\n\nDo you want to create these fields now? \n(Requires Admin Permissions on ShotGrid!)'
         ret = QtGui.QMessageBox.critical(None, "Missing Fields",
                                         msg, QtGui.QMessageBox.Ok | QtGui.QMessageBox.Cancel)
         if ret == QtGui.QMessageBox.Ok:

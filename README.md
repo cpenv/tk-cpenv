@@ -49,6 +49,11 @@ environment_entity keys will be specific to your shotgun site.
 <img src="https://github.com/cpenv/tk-cpenv/blob/master/images/3_environment_entity.png" width="640"/>
 
 ## Add fields to your new entities
+The app will ask you if you want to automatically create the required app fields when you launch the app.
+
+
+If you prefer to create them manually, here are the fields you need to add.
+
 1. Add the following fields to the Module Entity.
 <img src="https://github.com/cpenv/tk-cpenv/blob/master/images/4_module_fields.png" width="640"/>
 2. Add the following fields to the Environment Entity.
