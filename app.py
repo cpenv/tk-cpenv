@@ -5,6 +5,7 @@ from collections import namedtuple
 
 # Shotgun imports
 import sgtk
+from sgtk.platform.qt import QtGui
 
 
 MissingModuleSpec = namedtuple(
@@ -64,6 +65,7 @@ class CpenvApplication(sgtk.platform.Application):
 
     def init_app(self):
 
+
         self.ui = self.import_module('cpenv_ui')
         self.cpenv = self.import_module('cpenv')
 
@@ -117,6 +119,190 @@ class CpenvApplication(sgtk.platform.Application):
             self.show_module_selector,
         )
 
+    def check_app_fields(self):
+        """Check if the entity has the required fields for this app."""
+        self.logger.info("tk-cpenv: Checking if the entity has the required fields for this app...")
+
+        module_fields = {
+            "sg_archive": {
+                "data_type": "url",
+                "display_name": "Archive",
+                "description": "CPENV: The archive file for this module.",
+            },
+            "sg_archive_size": {
+                "data_type": "number",
+                "display_name": "Archive Size",
+                "description": "CPENV: The size of the archive file for this module.",
+            },
+            "sg_author": {
+                "data_type": "text",
+                "display_name": "Author",
+                "description": "CPENV: The author of this module.",
+            },
+            "sg_data": {
+                "data_type": "text",
+                "display_name": "Data",
+                "description": "CPENV: The data for this module.",
+            },
+            "sg_email": {
+                "data_type": "text",
+                "display_name": "Email",
+                "description": "CPENV: The email of the author of this module.",
+            },
+            "sg_version": {
+                "data_type": "text",
+                "display_name": "Version",
+                "description": "CPENV: The version of this module.",
+            },
+        }
+
+        environment_fields = {
+            "sg_software_versions": {
+                "data_type": "text",
+                "display_name": "Software Versions",
+                "description": "CPENV: The software versions this environment applies to.",
+            },
+            "sg_engine": {
+                "data_type": "text",
+                "display_name": "Engine",
+                "description": "CPENV: The engine this environment applies to.",
+            },
+            "sg_permissions_users": {
+                "data_type": "multi_entity",
+                "display_name": "Permissions Users",
+                "description": "CPENV: The users that have permissions to use this environment.",
+                "valid_types": ["HumanUser"],
+            },
+            "sg_requires": {
+                "data_type": "text",
+                "display_name": "Requires",
+                "description": "CPENV: The modules required for this environment.",
+            },
+        }
+
+        # Check Module Fields in ShotGrid
+        module_entity = self.get_setting('module_entity')
+        existing_module_fields = self.shotgun.schema_field_read(module_entity).keys()
+        module_fields_missing = []
+        module_field_requirements = [x for x in module_fields.keys()]
+        for field in module_field_requirements:
+            if field not in existing_module_fields:
+                module_fields_missing.append(field)
+                self.logger.error('tk-cpenv: The entity {} does not have the required field "{}"!'.format(module_entity, field))
+
+        # Check Environment Fields in ShotGrid
+        environment_entity = self.get_setting('environment_entity')
+        existing_environment_fields = self.shotgun.schema_field_read(environment_entity).keys()
+        environment_fields_missing = []
+        environment_field_requirements = [x for x in environment_fields.keys()]
+        for field in environment_field_requirements:
+            if field not in existing_environment_fields:
+                environment_fields_missing.append(field)
+                self.logger.error(
+                    'The entity {} does not have the required field "{}"!'.format(environment_entity, field))
+
+        if not module_fields_missing and not environment_fields_missing:
+            self.logger.info('tk-cpenv: All required fields are present.')
+            return True
+
+        # If we are missing fields, display a message box
+        msg = ""
+
+        if module_fields_missing:
+            msg += 'The entity {} (Module Entity) is missing the following fields:'.format(module_entity)
+            for field in module_fields_missing:
+                msg += '\n\t- {}'.format(field)
+            self.logger.error(msg)
+
+        if environment_fields_missing:
+            msg += '\n\nThe entity {} (Environment Entity) is missing the following fields:'.format(environment_entity)
+            for field in environment_fields_missing:
+                msg += '\n\t- {}'.format(field)
+            self.logger.error(msg)
+
+        # display message box
+        msg += '\n\nDo you want to create these fields now? \n(Requires Admin Permissions on ShotGrid)'
+        ret = QtGui.QMessageBox.critical(None, "Missing Fields",
+                                        msg, QtGui.QMessageBox.Ok | QtGui.QMessageBox.Cancel)
+        if ret == QtGui.QMessageBox.Ok:
+            self.logger.info('tk-cpenv: Creating missing fields...')
+
+            # Create missing module fields
+            module_success_fields = []
+            module_failed_fields = []
+            if module_fields_missing:
+                for field in module_fields_missing:
+                    new_field = self.create_schema_field(module_entity, field, **module_fields[field])
+                    if new_field == field:
+                        module_success_fields.append(field)
+                    else:
+                        module_failed_fields.append(field)
+
+            # Create missing environment fields
+            environment_success_fields = []
+            environment_failed_fields = []
+            if environment_fields_missing:
+                for field in environment_fields_missing:
+                    new_field = self.create_schema_field(environment_entity, field, **environment_fields[field])
+                    if new_field == field:
+                        environment_success_fields.append(field)
+                    else:
+                        environment_failed_fields.append(field)
+
+            if module_failed_fields or environment_failed_fields:
+                msg = "The following fields failed to create:\n"
+                if module_failed_fields:
+                    msg += "\nModule Fields:"
+                    for field in module_failed_fields:
+                        msg += "\n\t \U0000274C {}".format(field)
+                if environment_failed_fields:
+                    msg += "\n\nEnvironment Fields:"
+                    for field in environment_failed_fields:
+                        msg += "\n\t \U0000274C {}".format(field)
+                ret = QtGui.QMessageBox.critical(None, "Failed to Create Fields",
+                                                msg, QtGui.QMessageBox.Ok)
+            else:
+                msg = "The following fields were created:\n"
+                if module_success_fields:
+                    msg += "\nModule Fields:"
+                    for field in module_success_fields:
+                        msg += "\n\t \U00002705 {}".format(field)
+                if environment_success_fields:
+                    msg += "\n\nEnvironment Fields:"
+                    for field in environment_success_fields:
+                        msg += "\n\t \U00002705 {}".format(field)
+                ret = QtGui.QMessageBox.information(None, "Fields Created",
+                                                    msg, QtGui.QMessageBox.Ok)
+        else:
+            self.logger.info('tk-cpenv: Not creating missing fields...')
+
+    def create_schema_field(self, entity, field, data_type, display_name, description=None, valid_types=None):
+        """Create a schema field in ShotGrid."""
+        self.logger.debug('tk-cpenv: Creating field "{}" on entity "{}"'.format(field, entity))
+        self.logger.debug('tk-cpenv: entity: {}'.format(entity))
+        self.logger.debug('tk-cpenv: field: {}'.format(field))
+        self.logger.debug('tk-cpenv: data_type: {}'.format(data_type))
+        self.logger.debug('tk-cpenv: display_name: {}'.format(display_name))
+        self.logger.debug('tk-cpenv: description: {}'.format(description))
+        self.logger.debug('tk-cpenv: valid_types: {}'.format(valid_types))
+
+        # Create the field
+        properies = {}
+        if description:
+            properies['description'] = description
+        if valid_types:
+            properies['valid_types'] = valid_types
+
+        try:
+            new_field = self.shotgun.schema_field_create(entity, data_type, display_name, properties=properies)
+        except Exception as e:
+            self.logger.error(e)
+            QtGui.QMessageBox.critical(None, "Failed to Create Field",
+                                        "Failed to create field: {} \n\n{}".format(field, e), QtGui.QMessageBox.Ok)
+            return False
+        self.logger.info('tk-cpenv: Created field "{}" on entity "{}"'.format(new_field, entity))
+        return new_field
+
     def show_error(self, label, message):
         return self.engine.show_modal(
             title='tk-cpenv Error',
@@ -130,6 +316,8 @@ class CpenvApplication(sgtk.platform.Application):
         '''Show the ModuleSelector dialog.'''
 
         self.ui.module_selector.show(self)
+        # check if all the required fields for this app are set up.
+        self.check_app_fields()
 
     def show_environment_selector(self, environments):
         '''Show the EnvSelector dialog.'''
