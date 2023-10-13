@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [v0.5.12](https://github.com/cpenv/tk-cpenv/releases/tag/v0.5.12) - 2023-10-13
+
+<small>[Compare with v0.5.11](https://github.com/cpenv/tk-cpenv/compare/v0.5.11...v0.5.12)</small>
+
+### Added
+- Add functionality to check and create missing fields on entities ([b6f85f0](https://github.com/cpenv/tk-cpenv/commit/b6f85f0308888b5699d3d92c79d7feef9982f984) by Ricardo Musch).
+
+
 ## [v0.5.11](https://github.com/cpenv/tk-cpenv/releases/tag/v0.5.11) - 2022-09-03
 
 <small>[Compare with v0.5.10](https://github.com/cpenv/tk-cpenv/compare/v0.5.10...v0.5.11)</small>
