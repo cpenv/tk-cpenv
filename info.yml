@@ -41,14 +41,17 @@ configuration:
     description: Where to store modules locally. Defaults to C:/ProgramData/cpenv on Windows, /Library/Application Support/cpenv on Mac, /usr/local/share/cpenv or /usr/share/cpenv on Linux OR the value of CPENV_HOME envvar.
     default_value: ''
     required: False
+
   module_paths:
     type: list
     values: {type: str}
     description: Additional paths used to resolve modules.
     allows_empty: True
+
   module_entity:
     type: str
     description: Name of the CustomNonProjectEntity named "Module".
+
   environment_entity:
     type: str
     description: Name of the CustomEntity named "Environment".
