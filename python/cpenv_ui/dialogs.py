@@ -77,7 +77,15 @@ class ProgressDialog(QtGui.QDialog):
 
     def set_progress(self, chunk_size=None, max_size=None):
         if max_size:
+            if max_size != 1:
+                if len(str(max_size)) > 9:
+                    # Fix for OverflowError int larger than maximum 32-bit integer
+                    # not super elegant, but it works
+                    max_size = max_size / 1000
             self.progress.setRange(0, max_size)
+            self.progress.setValue(0)
+            self.progress.setFormat('0%')
+            self.progress.setRange(0, int(max_size))
             self.progress.setValue(0)
             self.progress.setFormat('0%')
         if chunk_size:
