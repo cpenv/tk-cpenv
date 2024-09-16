@@ -7,6 +7,8 @@ from sgtk.platform.qt import QtCore, QtGui
 # Local imports
 from . import res
 
+C_MAX_INT = 2147483647
+
 
 class ProgressDialog(QtGui.QDialog):
 
@@ -29,6 +31,7 @@ class ProgressDialog(QtGui.QDialog):
         self.progress.setTextVisible(True)
         self.progress.setAlignment(QtCore.Qt.AlignCenter)
         self.progress.setFormat('starting')
+        self.progress.scale_factor = 1.0
         self.frame = QtGui.QLabel()
         self.button = QtGui.QPushButton('Cancel')
         self.button.setSizePolicy(
@@ -77,11 +80,15 @@ class ProgressDialog(QtGui.QDialog):
 
     def set_progress(self, chunk_size=None, max_size=None):
         if max_size:
-            self.progress.setRange(0, max_size)
+            if max_size > C_MAX_INT:
+                self.progress.scale_factor = 1.0 / 1000.0
+            else:
+                self.progress.scale_factor = 1.0
+            self.progress.setRange(0, int(max_size * self.progress.scale_factor))
             self.progress.setValue(0)
             self.progress.setFormat('0%')
         if chunk_size:
-            value = self.progress.value() + chunk_size
+            value = self.progress.value() + int(chunk_size * self.progress.scale_factor)
             percent = (value / self.progress.maximum()) * 100
             self.progress.setValue(value)
             self.progress.setFormat('{:0.0f}%'.format(percent))
