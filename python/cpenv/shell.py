@@ -9,6 +9,14 @@ import subprocess
 # Local imports
 from . import compat
 
+# Third party imports
+try:
+    import psutil
+
+    psutil_available = True
+except ImportError:
+    psutil_available = False
+
 
 def binpath(*paths):
     """Like os.path.join but acts relative to this packages bin path."""
@@ -50,30 +58,36 @@ def get_shell():
         return preferred_shell
 
     # Attempt to find parent shell using psutil
-    try:
-        import psutil
+    if psutil_available:
+        try:
+            supported_shells = [
+                # Windows
+                "powershell.exe",
+                "cmd.exe",
+                "powershell",
+                "cmd",
+                # Bourne Shells
+                "bash",
+                "sh",
+                "dash",
+                "ash",
+                # C Shells
+                "csh",
+                "tcsh",
+                # Alternatives
+                "fish",
+                "ksh",
+                "zsh",
+                "xonsh",
+            ]
 
-        supported_shells = [
-            "powershell.exe",
-            "cmd.exe",
-            "powershell",
-            "cmd",
-            "bash",
-            "sh",
-            "fish",
-            "xonsh",
-            "zsh",
-            "csh",
-        ]
-
-        process_parents = psutil.Process().parents()
-        for proc in process_parents[::-1]:
-            exe = proc.exe()
-            exe_name = os.path.basename(exe)
-            if exe_name in supported_shells:
-                return exe
-    except ImportError:
-        pass
+            process_parents = psutil.Process().parents()
+            for proc in process_parents[::-1]:
+                exe = proc.exe()
+                if os.path.basename(exe).lower() in supported_shells:
+                    return exe
+        except Exception:
+            pass
 
     # Fallback to a default shell
     return {

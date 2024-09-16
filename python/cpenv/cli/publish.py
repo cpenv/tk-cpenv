@@ -26,7 +26,6 @@ class Publish(core.CLI):
         )
 
     def run(self, args):
-
         core.echo()
 
         # Get repo
@@ -48,13 +47,18 @@ class Publish(core.CLI):
         choice = core.prompt("Publish module to %s?[y/n] " % to_repo.name)
         if choice.lower() not in ["y", "yes", "yup"]:
             core.echo("Aborted.")
-            sys.exit(1)
+            core.exit(1)
 
         # Publish
         module = Module(module_spec.path)
-        published = to_repo.upload(module, args.overwrite)
-        core.echo()
+        try:
+            published = to_repo.upload(module, args.overwrite)
+        except Exception as e:
+            core.echo()
+            core.echo("{}: {}".format(type(e).__name__, e))
+            return
 
+        core.echo()
         core.echo("Activate your module:")
-        core.echo("  cpenv activate %s" % published.real_name)
+        core.echo("  cpenv activate %s" % published.qual_name)
         core.echo()
