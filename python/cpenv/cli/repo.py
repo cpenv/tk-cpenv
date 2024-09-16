@@ -57,7 +57,10 @@ class AddRepo(core.CLI):
     """Add a new repo.
 
     LocalRepo:
-      cpenv repo add --type=local custom --path=~/custom_repo
+      cpenv repo add --type=local custom --path=~/custom_repo --nested=True
+
+    RemoteRepo:
+      cpenv repo add --type=remote share --path=/mnt/network/share --nested=True
 
     ShotgunRepo:
         cpenv repo add --type=shotgun my_shotgun --base_url=https://my.shotgunstudio.com --script_name=cpenv --api_key=secret
@@ -76,7 +79,7 @@ class AddRepo(core.CLI):
         parser.add_argument(
             "--type",
             help="Type of repo",
-            choices=["local", "shotgun"],
+            choices=list(repos.registry.keys()),
             default="local",
         )
         parser.add_argument(
