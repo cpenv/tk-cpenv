@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 <!-- insertion marker -->
+## [v0.5.14](https://github.com/cpenv/tk-cpenv/releases/tag/v0.5.14) - 2024-11-07
+
+<small>[Compare with v0.5.13](https://github.com/cpenv/tk-cpenv/compare/v0.5.13...v0.5.14)</small>
+
 ## [v0.5.13](https://github.com/cpenv/tk-cpenv/releases/tag/v0.5.13) - 2024-09-16
 
 <small>[Compare with v0.5.12](https://github.com/cpenv/tk-cpenv/compare/v0.5.12...v0.5.13)</small>
