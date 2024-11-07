@@ -36,7 +36,7 @@ class ShotgunRepo(Repo):
 
         The following fields must be added to the "Module" entity.
           - archive       File/Link
-          - archive_size  Number
+          - archive_size  String
           - author        Text
           - description   Text
           - email         Text
@@ -180,12 +180,14 @@ class ShotgunRepo(Repo):
         # progress reporting.
         reporter = get_reporter()
         chunk_size = 8192
-        download_size = self.get_size(module_spec)
-        zip_chunk_size = (download_size / chunk_size) * 10
+        download_size = kb(self.get_size(module_spec))
         progress_bar = reporter.progress_bar(
             label="Download %s" % module_spec.name,
-            max_size=download_size + zip_chunk_size,
-            data={"module_spec": module_spec},
+            max_size=download_size,
+            data={
+                "module_spec": module_spec,
+                "unit_divisor": 1024,
+            },
         )
         with progress_bar as progress_bar:
             response = http.get(archive["url"])
@@ -194,13 +196,12 @@ class ShotgunRepo(Repo):
                 chunk = response.read(chunk_size)
                 if not chunk:
                     break
-                progress_bar.update(len(chunk))
+                progress_bar.update(kb(len(chunk)))
                 data.write(chunk)
 
             # Construct and extract in-memory zip archive
             zip_file = zipfile.ZipFile(data)
             zip_file.extractall(where)
-            progress_bar.update(zip_chunk_size)
 
             module = Module(where)
             progress_bar.update(
@@ -463,3 +464,9 @@ def module_to_entity(module, **fields):
     data = module.raw_config.strip("\n")
     fields.setdefault("sg_data", data)
     return fields
+
+
+def kb(bytes):
+    """Convert bytes value to kilobytes."""
+
+    return int(bytes / 1024)
