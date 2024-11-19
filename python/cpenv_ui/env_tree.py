@@ -46,9 +46,9 @@ class EnvTree(QtGui.QTreeWidget):
         # Setup header
         self.setHeaderLabels(['Key', 'Value'])
         header = self.header()
-        header.setSectionResizeMode(header.ResizeToContents)
+        header.setSectionResizeMode(QtGui.QHeaderView.ResizeToContents)
         header.setStretchLastSection(False)
-        header.setSectionResizeMode(Value, header.Stretch)
+        header.setSectionResizeMode(Value, QtGui.QHeaderView.Stretch)
 
         self.set_data(data)
 
@@ -74,13 +74,13 @@ class EnvTree(QtGui.QTreeWidget):
                     child.setText(Key, key)
                 parent_item.addChild(child)
             else:
-                item = QtGui.QTreeWidgetItem(parent=self)
+                item = QtGui.QTreeWidgetItem()
                 item.setText(Key, key)
                 item.setText(Value, value)
                 self.addTopLevelItem(item)
         elif isinstance(value, (list, tuple)):
             if not parent_item:
-                parent_item = QtGui.QTreeWidgetItem(parent=self)
+                parent_item = QtGui.QTreeWidgetItem()
                 parent_item.setText(Key, key)
                 self.addTopLevelItem(parent_item)
 
@@ -88,7 +88,7 @@ class EnvTree(QtGui.QTreeWidget):
                 self.set(key, v, parent_item)
         elif isinstance(value, dict):
             if not parent_item:
-                parent_item = QtGui.QTreeWidgetItem(parent=self)
+                parent_item = QtGui.QTreeWidgetItem()
                 parent_item.setText(Key, key)
                 self.addTopLevelItem(parent_item)
 

@@ -46,13 +46,13 @@ class ModuleList(QtGui.QTreeWidget):
         # Setup header
         self.setHeaderLabels(['Name', 'Version'])
         header = self.header()
-        header.setSectionResizeMode(header.ResizeToContents)
+        header.setSectionResizeMode(QtGui.QHeaderView.ResizeToContents)
         header.setStretchLastSection(False)
-        header.setSectionResizeMode(Name, header.Stretch)
+        header.setSectionResizeMode(Name, QtGui.QHeaderView.Stretch)
 
         # Selection behavior
-        self.setSelectionMode(self.ExtendedSelection)
-        self.setSelectionBehavior(self.SelectRows)
+        self.setSelectionMode(QtGui.QTreeWidget.ExtendedSelection)
+        self.setSelectionBehavior(QtGui.QTreeWidget.SelectRows)
 
         # Drag and drop settings
         self.setDragDropMode(QtGui.QAbstractItemView.DragDrop)
@@ -96,7 +96,7 @@ class ModuleList(QtGui.QTreeWidget):
         self.version_changed.emit(item.spec_set)
 
     def create_item(self, spec_set):
-        item = QtGui.QTreeWidgetItem(parent=self)
+        item = QtGui.QTreeWidgetItem()
         item.spec_set = spec_set
         item.setText(Name, spec_set.selection.name)
         item.setText(Version, spec_set.selection.version.string)
