@@ -1,26 +1,28 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function
 
+import sys
+import traceback
+
 # Standard library imports
 from collections import OrderedDict
 from functools import partial
 from string import Template
-import sys
-import traceback
 
 # Shotgun imports
 import sgtk
 from sgtk.platform.qt import QtCore, QtGui
 
+from . import res
+
 # Local imports
 from .dialogs import ErrorDialog
-from .env_importer import EnvImporter
 from .env_display import EnvDisplay
+from .env_importer import EnvImporter
 from .env_permissions import EnvPermissions
-from .module_list import ModuleList
 from .module_info import ModuleInfo
+from .module_list import ModuleList
 from .notice import Notice
-from . import res
 
 app = sgtk.platform.current_bundle()
 

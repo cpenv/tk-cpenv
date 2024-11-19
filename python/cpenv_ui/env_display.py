@@ -16,7 +16,6 @@ from . import res
 from .env_tree import EnvTree
 from .notice import Notice
 
-
 app = sgtk.platform.current_bundle()
 
 
@@ -39,7 +38,7 @@ class EnvDisplay(QtGui.QDialog):
         self.copy_button.clicked.connect(self.copy_to_clipboard)
 
         self.button_layout = QtGui.QHBoxLayout()
-        self.button_layout.setDirection(self.button_layout.RightToLeft)
+        self.button_layout.setDirection(QtGui.QHBoxLayout.RightToLeft)
         self.button_layout.addWidget(self.ok_button)
         self.button_layout.addWidget(self.copy_button)
         self.button_layout.addStretch()

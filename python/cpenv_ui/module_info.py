@@ -47,7 +47,7 @@ class ModuleInfo(QtGui.QWidget):
         self.version = QtGui.QLabel('Version')
         self.size = QtGui.QLabel('Size')
         self.requires = MinimizedList(parent=self)
-        self.requires.setSelectionMode(self.requires.NoSelection)
+        self.requires.setSelectionMode(QtGui.QListView.NoSelection)
         self.requires.setFocusPolicy(QtCore.Qt.NoFocus)
         self.requires_copy = QtGui.QToolButton(
             icon=QtGui.QIcon(res.get_path('copy.png'))
@@ -63,7 +63,7 @@ class ModuleInfo(QtGui.QWidget):
             QtGui.QSizePolicy.Expanding,
         )
         self.environment.setFocusPolicy(QtCore.Qt.NoFocus)
-        self.environment.setSelectionMode(self.environment.NoSelection)
+        self.environment.setSelectionMode(QtGui.QListView.NoSelection)
         self.environment_copy = QtGui.QToolButton(
             icon=QtGui.QIcon(res.get_path('copy.png'))
         )
