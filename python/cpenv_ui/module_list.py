@@ -26,7 +26,7 @@ Version = 1
 
 class ModuleList(QtGui.QTreeWidget):
 
-    version_changed = QtCore.Signal([object])
+    version_changed = QtCore.Signal(object)
     item_dropped = QtCore.Signal()
 
     def __init__(self, name, parent=None):
@@ -71,10 +71,10 @@ class ModuleList(QtGui.QTreeWidget):
         index = self.indexAt(event.pos())
         indicator = self.dropIndicatorPosition()
 
-        if indicator in (self.OnItem, self.AboveItem):
+        if indicator in (QtGui.QAbstractItemView.OnItem, QtGui.QAbstractItemView.AboveItem):
             for item in reversed(event.source().selectedItems()):
                 self.insert_spec_set(index.row(), item.spec_set)
-        elif indicator is self.BelowItem:
+        elif indicator is QtGui.QAbstractItemView.BelowItem:
             for item in reversed(event.source().selectedItems()):
                 self.insert_spec_set(index.row() + 1, item.spec_set)
         else:
