@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 <!-- insertion marker -->
+## [v0.5.15](https://github.com/cpenv/tk-cpenv/releases/tag/v0.5.15) - 2024-11-19
+
+<small>[Compare with v0.5.14](https://github.com/cpenv/tk-cpenv/compare/v0.5.14...v0.5.15)</small>
+
+### Fixed
+
+- Fix issues with enum class attribute access in PySide6. ([04517f5](https://github.com/cpenv/tk-cpenv/commit/04517f590f90ccf2b911fba2d8cea5d3e53e4b86) by Dan Bradham).
+
 ## [v0.5.14](https://github.com/cpenv/tk-cpenv/releases/tag/v0.5.14) - 2024-11-07
 
 <small>[Compare with v0.5.13](https://github.com/cpenv/tk-cpenv/compare/v0.5.13...v0.5.14)</small>
